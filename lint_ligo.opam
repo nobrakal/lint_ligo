@@ -1,0 +1,22 @@
+opam-version: "2.0"
+maintainer: [
+  "Alexandre Moine <alexandre@moine.me>"
+]
+authors: [
+  "Alexandre Moine <alexandre@moine.me>"
+]
+license: "MIT"
+homepage: "https://github.com/nobrakal/lint_ligo"
+bug-reports: "https://github.com/nobrakal/lint_ligo/issues"
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+depends: [
+  "dune"     {build >= "1.0.0"}
+  "yojson"
+  "ligo"
+]
+synopsis: "A linter for the LIGO language"
+description: """
+A linter for the LIGO language.
+"""
