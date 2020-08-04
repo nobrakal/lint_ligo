@@ -1,2 +1,2 @@
-# lint-ligo
+# lint_ligo
 Lint ligo

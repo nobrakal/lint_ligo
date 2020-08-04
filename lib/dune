@@ -1,2 +1,4 @@
 (library
- (name lint_ligo))
+ (name lint_ligo)
+ (libraries yojson ligo.ast_impretative)
+)
