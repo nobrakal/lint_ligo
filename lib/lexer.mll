@@ -19,7 +19,12 @@ rule token = parse
   | blank+   { token lexbuf }
   | eof      { EOF }
 
-  | "deprecated" { DEPRECATED }
+  | "depreciate" { DEPRECIATE }
+  | "replacement" { REPLACEMENT }
+  | "message" { MESSAGE }
+  | "in" { IN }
+
+  | digit+ as num { Int (int_of_string num) }
   | ident as id { String id }
 
   | _ { failwith ("unexpected character: " ^ (Lexing.lexeme lexbuf)) }
