@@ -13,5 +13,7 @@ rule token = parse
   | newline  { token lexbuf }
   | blank+   { token lexbuf }
   | eof      { EOF }
+  | "%("     { MLP }
+  | "%)"     { MRP }
   | [^' ' '\009' '\012']+ as str { Word str }
   | _ { failwith ("unexpected character: " ^ (Lexing.lexeme lexbuf)) }

@@ -4,16 +4,21 @@
 
 %token EOF
 
+(* For rules *)
 %token DEPRECIATE IN REPLACEMENT MESSAGE
 %token PATTERN
 
 %token<string> String
-%token<string> Word
 
 %token<string> FullyEscapedString
 %token<int> Int
 
 %start<Rules.rule list> rules
+
+(* For unparsed patterns *)
+%token<string> Word
+%token MLP MRP
+
 %start<string list> words
 
 %%
