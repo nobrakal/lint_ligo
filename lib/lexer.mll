@@ -2,6 +2,8 @@
 
   open Parser
 
+  let pat_buff = Buffer.create 2048
+
 }
 
 (** Regexpr **)
@@ -23,8 +25,14 @@ rule token = parse
   | "replacement" { REPLACEMENT }
   | "message" { MESSAGE }
   | "in" { IN }
+  | "pattern" { PATTERN }
+  | "%{" { Buffer.clear pat_buff ; pattern lexbuf }
 
   | digit+ as num { Int (int_of_string num) }
   | ident as id { String id }
 
   | _ { failwith ("unexpected character: " ^ (Lexing.lexeme lexbuf)) }
+
+and pattern = parse
+  | "%}" { FullyEscapedString (Buffer.contents pat_buff) }
+  | _ as c { Buffer.add_char pat_buff c; pattern lexbuf }

@@ -5,22 +5,30 @@
 %token EOF
 
 %token DEPRECIATE IN REPLACEMENT MESSAGE
+%token PATTERN
 
 %token<string> String
+%token<string> Word
+
+%token<string> FullyEscapedString
 %token<int> Int
 
 %start<Rules.rule list> rules
+%start<string list> words
 
 %%
 
 rules: xs=list(rule) EOF { xs }
 
 rule:
-| DEPRECIATE name=String IN version=Int replacement=option(replacement) message=option(message)
-  { Depreciate {name; version; replacement; message} }
+| DEPRECIATE dep=String IN dep_version=Int dep_replacement=option(replacement) dep_message=option(message)
+  { Depreciate {dep; dep_version; dep_replacement; dep_message} }
+| PATTERN pat=FullyEscapedString MESSAGE pat_message=String { Pattern {pat;pat_message} }
 
 replacement:
 | REPLACEMENT replacement=String { replacement }
 
 message:
 | MESSAGE message=String { message }
+
+words: xs=list(Word) EOF { xs }

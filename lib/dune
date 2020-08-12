@@ -1,4 +1,4 @@
-(ocamllex lexer)
+(ocamllex lexer lexer_unparsed)
 (menhir (modules parser) (flags --explain))
 
 (library
