@@ -4,7 +4,8 @@ let run _ast = function
   | Depreciate _depreciate -> failwith "todo"
   | Pattern {pat;pat_message} ->
      ignore pat_message;
-     let _unparsed_pattern = Parser.words Lexer_unparsed.token (Lexing.from_string pat) in
+     let _unparsed_pattern =
+       Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
      failwith "todo"
 
 let main rules ast =

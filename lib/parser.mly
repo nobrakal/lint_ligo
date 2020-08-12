@@ -19,7 +19,7 @@
 %token<string> Word
 %token MLP MRP
 
-%start<string list> words
+%start<Rules.pattern> unparsed_pattern
 
 %%
 
@@ -36,4 +36,10 @@ replacement:
 message:
 | MESSAGE message=String { message }
 
-words: xs=list(Word) EOF { xs }
+unparsed_pattern:
+| xs=nonempty_list(pattern) EOF { Pat xs }
+
+pattern:
+| x=Word { Lexeme x }
+| x=String  { Var x }
+| MLP xs=nonempty_list(pattern) MRP { Pat xs }

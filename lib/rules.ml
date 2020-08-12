@@ -6,10 +6,15 @@ type depreciate =
   }
 
 type pattern =
+  | Lexeme of string
+  | Pat of pattern list
+  | Var of string
+
+type annoted_pattern =
   { pat: string;
     pat_message: string
   }
 
 type rule =
   | Depreciate of depreciate
-  | Pattern of pattern
+  | Pattern of annoted_pattern
