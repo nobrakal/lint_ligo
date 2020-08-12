@@ -28,7 +28,6 @@ rule token = parse
   | "pattern" { PATTERN }
   | "%{" { Buffer.clear pat_buff ; pattern lexbuf }
 
-  | digit+ as num { Int (int_of_string num) }
   | ident as id { String id }
 
   | _ { failwith ("unexpected character: " ^ (Lexing.lexeme lexbuf)) }

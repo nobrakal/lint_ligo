@@ -1,6 +1,6 @@
 type depreciate =
   { dep : string;
-    dep_version : int;
+    dep_version : string;
     dep_replacement : string option;
     dep_message : string option
   }
