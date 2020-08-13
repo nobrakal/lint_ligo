@@ -10,7 +10,7 @@ let is_equal_to_wrapped_var x y =
 let search_depreciated (dep : string) (ast: Mini_c.program) =
   let rec expression {content;location;_} =
     match content with
-    | E_literal _ | E_constant _ -> []
+    | E_literal _ | E_constant _ -> [location]
     | E_closure {binder;body} ->
        if is_equal_to_wrapped_var binder dep then [] else expression body
     | E_application (l,r) -> expression l @ expression r

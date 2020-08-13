@@ -27,5 +27,6 @@ let main_serialized ~rules ~ast =
   match parse_ast ast with
   | Error e -> failwith e
   | Ok ast ->
-     let result = main (parse_rules rules) ast in
-     serialize result
+     match main (parse_rules rules) ast with
+     | [] -> None
+     | result -> Some (serialize result)
