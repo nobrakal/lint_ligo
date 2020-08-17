@@ -1,2 +1,3 @@
 # lint_ligo
-Lint ligo
+
+A linter for [LIGO](https://ligolang.org/).
