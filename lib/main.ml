@@ -1,4 +1,5 @@
 open Rules
+open Compile.Linter
 
 let pattern _ast {pat; pat_message} =
   ignore pat_message;
@@ -16,17 +17,20 @@ let main rules ast =
 let parse_rules buf =
   Parser.rules Lexer.token buf
 
-let parse_ast str_ast =
-  Mini_c.program_of_yojson (Yojson.Safe.from_string str_ast)
+let parse_and_run rules str_ast =
+  let run = function
+    | Cst _ -> []
+    | Typed ast -> main rules ast in
+  Result.map run (ast_of_yojson (Yojson.Safe.from_string str_ast))
 
 let serialize result =
-  let yojson_result = `List (List.map Simple_utils.Trace.linter_annotation_to_yojson result) in
+  let yojson_result = linter_result_to_yojson result in
   Yojson.Safe.to_string yojson_result
 
 let main_serialized ~rules ~ast =
-  match parse_ast ast with
+  match parse_and_run (parse_rules rules) ast with
   | Error e -> failwith e
-  | Ok ast ->
-     match main (parse_rules rules) ast with
+  | Ok result ->
+     match result with
      | [] -> None
      | result -> Some (serialize result)

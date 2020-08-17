@@ -1,1 +1,1 @@
-val depreciate : Mini_c.program -> Rules.depreciate -> Simple_utils.Trace.linter_annotation list
+val depreciate : Ast_typed.program -> Rules.depreciate -> Simple_utils.Trace.linter_annotation list
