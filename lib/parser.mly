@@ -18,7 +18,7 @@
 %token<string> Word
 %token MLP MRP
 
-%start<Rules.pattern> unparsed_pattern
+%start<Unparser_cameligo.node Pattern.pattern> unparsed_pattern
 
 %%
 
@@ -36,9 +36,9 @@ message:
 | MESSAGE message=String { message }
 
 unparsed_pattern:
-| xs=nonempty_list(pattern) EOF { Pat xs }
+| xs=nonempty_list(pattern) EOF { Pat_pat xs }
 
 pattern:
-| x=Word { Lexeme x }
-| x=String  { Var x }
-| MLP xs=nonempty_list(pattern) MRP { Pat xs }
+| x=Word { Pat_lex x }
+| x=String  { Pat_var (x,None) } (* TODO *)
+| MLP xs=nonempty_list(pattern) MRP { Pat_pat xs }
