@@ -3,5 +3,5 @@
 
 (library
  (name lint_ligo)
- (libraries yojson ligo.ast_typed ligo.compile)
+ (libraries yojson ligo.ast_typed ligo.compile ligo.decompile)
 )

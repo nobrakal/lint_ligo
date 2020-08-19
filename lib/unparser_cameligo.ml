@@ -18,7 +18,6 @@ type nonrec ast = node ast
 let lex x = Ast_lex x
 
 module K = struct
-  let kwd_and   = lex "and"
   let kwd_begin = lex "begin"
   let kwd_else  = lex "else"
   let kwd_end   = lex "end"
@@ -32,7 +31,6 @@ module K = struct
   let kwd_mod   = lex "mod"
   let kwd_not   = lex "not"
   let kwd_of    = lex "of"
-  let kwd_or    = lex "or"
   let kwd_then  = lex "then"
   let kwd_true  = lex "true"
   let kwd_type  = lex "type"
@@ -48,7 +46,6 @@ module K = struct
   let arrow    = lex "->"
   let cons     = lex "::"
   let cat      = lex "^"
-  let append   = lex "@"
   let dot      = lex "."
 
   (* Arithmetic operators *)

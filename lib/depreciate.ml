@@ -6,4 +6,4 @@ let _make_msg {dep; dep_version; dep_replacement; dep_message} =
   let mess = with_default (fun x -> " " ^ x ^ ".") dep_message in
   dep ^ " was depreciated in version "  ^ dep_version ^ "." ^ repl ^ mess
 
-let depreciate _ast _depreciated = []
+let depreciate _ast _depreciated = None
