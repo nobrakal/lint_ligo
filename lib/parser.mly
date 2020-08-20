@@ -1,5 +1,10 @@
 %{ (* -*- tuareg -*- *)
    open Rules
+
+   let new_var =
+     let counter = ref 0 in
+     fun () -> let res = string_of_int !counter in
+               counter := !counter + 1; res
 %}
 
 %token EOF
@@ -16,10 +21,9 @@
 
 (* For unparsed patterns *)
 %token<string> Word
-%token<string> Var
-%token<string * string> TVar
+%token<string * string option> TVar
 %token MLP MRP
-
+%token<string option> TWild
 %start<Unparser_cameligo.node Pattern.pattern> unparsed_pattern
 
 %%
@@ -44,8 +48,6 @@ unparsed_pattern:
 pattern:
 | x=Word { Pat_lex x }
 | x=TVar { let id,typ = x in
-        match Unparser_cameligo.node_of_string typ with
-        | None -> failwith ("Non-existent type: " ^ typ)
-        | Some typ -> Pat_var (id, Some typ )}
-| x=Var  { Pat_var (x,None) }
+           Pat_var (id, Option.map Unparser_cameligo.node_of_string' typ)}
+| typ=TWild { Pat_var (new_var (), Option.map Unparser_cameligo.node_of_string' typ)}
 | MLP xs=nonempty_list(pattern) MRP { Pat_pat xs }
