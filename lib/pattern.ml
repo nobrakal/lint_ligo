@@ -14,6 +14,12 @@ type 'a ast =
   | Ast_lex of string
   | Ast_node of 'a * 'a ast list
 
+let thunked_fold_ast lex node x =
+  let rec aux = function
+    | Ast_lex s -> lex s
+    | Ast_node (t,n) -> node t n (fun () -> List.map aux n)
+  in aux x
+
 let string_of_ast f x =
   let rec aux = function
     | Ast_lex x -> x
@@ -72,6 +78,13 @@ let mat ?(debug=false) p f =
        raise Failure
   in mat p f
 
-let pat_match ?(debug=false) p f =
-  try ignore (mat ~debug [p] [f]); true
-  with Failure -> false
+let ors = List.fold_left (||) false
+
+let pat_match ?(debug=false) p typ f =
+  let is_mat f =
+    try ignore (mat ~debug [p] [f]); true
+    with Failure -> false in
+  let lex _ = false in
+  let node typ' xs thunk =
+    (typ = typ' && (is_mat (Ast_node (typ,xs)))) || ors (thunk ()) in
+  thunked_fold_ast lex node f

@@ -3,16 +3,54 @@ open Cameligo.CST
 open Pattern
 
 type node =
-  | Ndeclarations
-  | NLet | NTypeDecl
-  | NExpr
+  | Declarations
+  | LetDecl | TypeDecl
+  | Expr
   | Par
   | Attribute
-  | TCartesian | TArrow | TSum | TRecord | TTuple | TApp | TVariant
+  | Type
   | Pattern
   | Field | Field_assign | Field_decl
   | Path | Clause
   | Name
+
+let string_of_node = function
+  | Declarations -> "declarations"
+  | LetDecl -> "letdecl"
+  | TypeDecl -> "typedecl"
+  | Expr -> "expr"
+  | Par -> "par"
+  | Attribute -> "attribute"
+  | Type -> "type"
+  | Pattern -> "pattern"
+  | Field -> "field"
+  | Field_assign -> "field_assign"
+  | Field_decl -> "field_decl"
+  | Path -> "path"
+  | Clause -> "clause"
+  | Name -> "name"
+
+let node_of_string = function
+  | "declarations" -> Some Declarations
+  | "letdecl" -> Some LetDecl
+  | "typedecl" -> Some TypeDecl
+  | "expr" -> Some Expr
+  | "par" -> Some Par
+  | "attribute" -> Some Attribute
+  | "type" -> Some Type
+  | "pattern" -> Some Pattern
+  | "field" -> Some Field
+  | "field_assign" -> Some Field_assign
+  | "field_decl" -> Some Field_decl
+  | "path" -> Some Path
+  | "clause" -> Some Clause
+  | "name" -> Some Name
+  | _ -> None
+
+let node_of_string' x =
+  match node_of_string x with
+  | Some x -> x
+  | None -> failwith "node_of_string"
 
 type nonrec ast = node ast
 
@@ -132,7 +170,7 @@ let print_mutez (_,value) =
 let print_unit = [K.rpar;K.rpar]
 
 let rec print_let_decl (kwd_rec, let_binding, attributes) =
-  node NLet @@
+  node LetDecl @@
     [K.kwd_let]
     @ List.map (const K.kwd_rec) (Option.to_list kwd_rec)
     @ print_let_binding let_binding
@@ -220,7 +258,7 @@ and print_expr x =
     | EFun        e -> unreg print_fun e
     | ESeq        e -> unreg (print_injection print_expr) e
     | ECodeInj    e -> unreg print_code_inj e in
-  Ast_node (NExpr,ast_x)
+  Ast_node (Expr,ast_x)
 
 and print_code_inj {language; code; _} =
   [K.code_inj; unreg (unreg lex) language; print_expr code; K.rbracket]
@@ -357,25 +395,25 @@ and print_cases xs = print_nsepseq (const K.vbar) (unreg print_clause) xs
 and print_clause {pattern; rhs; _} =
   node Clause [print_pattern pattern; K.arrow; print_expr rhs]
 
-and print_type_expr : type_expr -> ast = function
+and print_type_expr : type_expr -> ast = fun x ->
+  let xs = match x with
   | TProd cartesian ->
-     Ast_node (TCartesian,unreg (print_nsepseq (const K.times) print_type_expr) cartesian)
+     unreg (print_nsepseq (const K.times) print_type_expr) cartesian
   | TSum sum ->
-     Ast_node (TSum,unreg (print_nsepseq (const K.vbar) (fun x -> node TVariant (unreg print_variant x))) sum)
+     unreg (print_nsepseq (const K.vbar) (unreg print_variant)) sum
   | TRecord record ->
-     node TRecord (unreg print_fields record)
+     unreg print_fields record
   | TApp app ->
-     node TApp (unreg print_type_app app)
+     unreg print_type_app app
   | TFun func ->
-     unreg (fun (t1,_arrow,t2) -> Ast_node (TArrow, [print_type_expr t1; K.arrow; print_type_expr t2])) func
+     unreg (fun (t1,_arrow,t2) -> [print_type_expr t1; K.arrow; print_type_expr t2]) func
   | TPar te ->
-     unreg (fun p -> par [print_type_expr p.inside]) te
-  | TVar v ->
-     unreg lex v
+     [unreg (fun p -> par [print_type_expr p.inside]) te]
+  | TVar v | TString v ->
+     [unreg lex v]
   | TWild _ ->
-     lex "_"
-  | TString lexe ->
-     unreg lex lexe
+     [lex "_"]
+  in node Type xs
 
 and print_fields fields = print_ne_injection (unreg print_field_decl) fields
 
@@ -387,20 +425,21 @@ and print_type_app (ctor, tuple) =
 
 and print_type_tuple {inside; _} =
   let xs = print_nsepseq (const K.comma) print_type_expr inside in
-  let nxs = node TTuple xs in
+  let nxs = node Type xs in
   if List.length xs = 1
   then nxs
   else par [nxs]
 
 and print_variant {constr; arg} =
   let constr = unreg lex constr in
-  match arg with
-    None -> [constr]
-  | Some (_, e) ->
-     [constr; K.kwd_of;print_type_expr e]
+  let xs = match arg with
+    | None -> [constr]
+    | Some (_, e) ->
+       [constr; K.kwd_of;print_type_expr e]
+  in node Type xs
 
 let print_type_decl {name; type_expr; _} =
-  node NTypeDecl @@
+  node TypeDecl @@
     [K.kwd_type; unreg lex name; K.equal; print_type_expr type_expr]
 
 let declaration = function
@@ -408,4 +447,4 @@ let declaration = function
   | TypeDecl xs -> print_type_decl xs.value
 
 let unparse_cst : Cameligo.CST.t -> node Pattern.ast =
-  fun cst -> Ast_node (Ndeclarations, List.map declaration (Utils.nseq_to_list cst.decl))
+  fun cst -> Ast_node (Declarations, List.map declaration (Utils.nseq_to_list cst.decl))

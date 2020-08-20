@@ -7,6 +7,7 @@ type depreciate =
 
 type annoted_pattern =
   { pat: string;
+    pat_type: string;
     pat_message: string
   }
 

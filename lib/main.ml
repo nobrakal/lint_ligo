@@ -4,10 +4,11 @@ open Compile.Linter
 let filter_some xs =
   List.fold_right (fun x acc -> match x with None -> acc | Some x -> x::acc) xs []
 
-let pattern ast {pat; pat_message} =
+let pattern ast {pat; pat_type; pat_message} =
   let unparsed_pattern =
     Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
-  if Pattern.pat_match unparsed_pattern ast
+  let typ = Unparser_cameligo.node_of_string' pat_type in
+  if Pattern.pat_match unparsed_pattern typ ast
   then Some (Simple_utils.Location.generated, pat_message)
   else None
 

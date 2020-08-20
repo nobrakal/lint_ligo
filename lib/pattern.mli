@@ -11,4 +11,4 @@ type 'a ast =
 
 val string_of_ast : ('a -> string) -> 'a ast -> string
 
-val pat_match : ?debug:bool -> 'a pattern -> 'a ast -> bool
+val pat_match : ?debug:bool -> 'a pattern -> 'a -> 'a ast -> bool
