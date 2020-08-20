@@ -74,8 +74,8 @@ module K = struct
 
   let lpar     = lex "("
   let rpar     = lex ")"
-  let lbracket = lex "]"
-  let rbracket = lex "["
+  let lbracket = lex "["
+  let rbracket = lex "]"
   let lbrace   = lex "}"
   let rbrace   = lex "{"
   let dquote   = lex "\""
