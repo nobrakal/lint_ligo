@@ -12,10 +12,11 @@ type node =
   | Pattern
   | Field | Field_assign | Field_decl
   | Path | Clause
+  | Name
 
 type nonrec ast = node ast
 
-let lex x = Ast_lex x
+let lex x = Ast_node (Name,[Ast_lex x])
 
 module K = struct
   let kwd_begin = lex "begin"

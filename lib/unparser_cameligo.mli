@@ -8,5 +8,6 @@ type node =
   | Pattern
   | Field | Field_assign | Field_decl
   | Path | Clause
+  | Name
 
 val unparse_cst : Cameligo.CST.t -> node Pattern.ast
