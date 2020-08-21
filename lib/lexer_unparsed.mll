@@ -22,7 +22,7 @@ rule token = parse
   | eof      { EOF }
   | "%("     { MLP }
   | "%)"     { MRP }
-  | "%_"      { TWild None }
+  | "%_"     { TWild None }
   | "%_:" (ident as typ) { TWild (Some typ) }
   | eident as id ":" (ident as typ) { TVar (id,Some typ)}
   | eident as id { TVar (id,None) }
