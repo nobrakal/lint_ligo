@@ -13,6 +13,7 @@ type node =
   | Field | Field_assign | Field_decl
   | Path | Clause
   | Name
+  | Keyword
 
 let string_of_node = function
   | Declarations -> "declarations"
@@ -29,6 +30,7 @@ let string_of_node = function
   | Path -> "path"
   | Clause -> "clause"
   | Name -> "name"
+  | Keyword -> "keyword"
 
 let node_of_string = function
   | "declarations" -> Some Declarations
@@ -45,6 +47,7 @@ let node_of_string = function
   | "path" -> Some Path
   | "clause" -> Some Clause
   | "name" -> Some Name
+  | "keyword" -> Some Keyword
   | _ -> None
 
 let node_of_string' x =
@@ -61,80 +64,83 @@ let lex x = node Name [Ast_lex x]
 let rlex x = lex x.value x.region
 
 module K = struct
-  let kwd_begin = lex "begin"
-  let kwd_else  = lex "else"
-  let kwd_end   = lex "end"
-  let kwd_false = lex "false"
-  let kwd_fun   = lex "fun"
-  let kwd_rec   = lex "rec"
-  let kwd_if    = lex "if"
-  let kwd_in    = lex "in"
-  let kwd_let   = lex "let"
-  let kwd_match = lex "match"
-  let kwd_mod   = lex "mod"
-  let kwd_not   = lex "not"
-  let kwd_of    = lex "of"
-  let kwd_then  = lex "then"
-  let kwd_true  = lex "true"
-  let kwd_type  = lex "type"
-  let kwd_with  = lex "with"
+  let kwd x = node Keyword [Ast_lex x]
+
+  let kwd_begin = kwd "begin"
+  let kwd_else  = kwd "else"
+  let kwd_end   = kwd "end"
+  let kwd_false = kwd "false"
+  let kwd_fun   = kwd "fun"
+  let kwd_rec   = kwd "rec"
+  let kwd_if    = kwd "if"
+  let kwd_in    = kwd "in"
+  let kwd_let   = kwd "let"
+  let kwd_match = kwd "match"
+  let kwd_mod   = kwd "mod"
+  let kwd_not   = kwd "not"
+  let kwd_of    = kwd "of"
+  let kwd_then  = kwd "then"
+  let kwd_true  = kwd "true"
+  let kwd_type  = kwd "type"
+  let kwd_with  = kwd "with"
 
   (* Data constructors *)
 
-  let c_None  = lex "None"
-  let c_Some  = lex "Some"
+  let c_None  = kwd "None"
+  let c_Some  = kwd "Some"
 
   (* Symbols *)
 
-  let arrow    = lex "->"
-  let cons     = lex "::"
-  let cat      = lex "^"
-  let dot      = lex "."
+  let arrow    = kwd "->"
+  let cons     = kwd "::"
+  let cat      = kwd "^"
+  let dot      = kwd "."
 
   (* Arithmetic operators *)
 
-  let minus    = lex "-"
-  let plus     = lex "+"
-  let slash    = lex "/"
-  let times    = lex "*"
+  let minus    = kwd "-"
+  let plus     = kwd "+"
+  let slash    = kwd "/"
+  let times    = kwd "*"
 
   (* Boolean operators *)
 
-  let bool_or  = lex "||"
-  let bool_and = lex "&&"
+  let bool_or  = kwd "||"
+  let bool_and = kwd "&&"
 
   (* Comparisons *)
 
-  let equal = lex "="
-  let neq   = lex "<>"
-  let lt    = lex "<"
-  let gt    = lex ">"
-  let leq   = lex "<="
-  let geq   = lex ">="
+  let equal = kwd "="
+  let neq   = kwd "<>"
+  let lt    = kwd "<"
+  let gt    = kwd ">"
+  let leq   = kwd "<="
+  let geq   = kwd ">="
 
   (* Compounds *)
 
-  let lpar     = lex "("
-  let rpar     = lex ")"
-  let lbracket = lex "["
-  let rbracket = lex "]"
-  let lbrace   = lex "}"
-  let rbrace   = lex "{"
-  let dquote   = lex "\""
-  let lverbat  = lex "{|"
-  let rverbat  = lex "|}"
-  let code_inj = lex "[%"
+  let lpar     = kwd "("
+  let rpar     = kwd ")"
+  let lbracket = kwd "["
+  let rbracket = kwd "]"
+  let lbrace   = kwd "}"
+  let rbrace   = kwd "{"
+  let dquote   = kwd "\""
+  let lverbat  = kwd "{|"
+  let rverbat  = kwd "|}"
+  let code_inj = kwd "[%"
+  let annot    = kwd "[@@"
 
   (* Separators *)
 
-  let comma = lex ","
-  let semi  = lex ";"
-  let vbar  = lex "|"
-  let colon = lex ":"
+  let comma = kwd ","
+  let semi  = kwd ";"
+  let vbar  = kwd "|"
+  let colon = kwd ":"
 
   (* Wildcard *)
 
-  let wild = lex "_"
+  let wild = kwd "_"
 
 end
 
@@ -155,7 +161,8 @@ let print_sepseq f g xs =
   | Some xs -> print_nsepseq f g xs
 
 let print_attribute x =
-  node Attribute ([lex "[@@" x.region; rlex x; lex "]" x.region]) x.region
+  node Attribute ([K.annot x.region; rlex x; K.rbracket x.region]) x.region
+
 let print_attributes xs = List.map print_attribute xs
 
 let print_int x =

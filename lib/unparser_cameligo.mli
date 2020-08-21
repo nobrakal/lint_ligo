@@ -9,6 +9,7 @@ type node =
   | Field | Field_assign | Field_decl
   | Path | Clause
   | Name
+  | Keyword
 
 val string_of_node : node -> string
 
