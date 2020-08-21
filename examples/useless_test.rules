@@ -1,0 +1,1 @@
+pattern expr %{ if %( %_ %) then %( %x %) else %( %x %) %} message "Useless test."
