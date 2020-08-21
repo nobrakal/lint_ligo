@@ -12,12 +12,13 @@ let make_dep_msg {dep; dep_version; dep_replacement; dep_message} =
   dep ^ " was depreciated in version "  ^ dep_version ^ "." ^ repl ^ mess
 
 (* Parse and run a pattern matching *)
-let pattern {pat; pat_type; pat_message} ast =
+let pattern ?(debug=false) {pat; pat_type; pat_message} ast =
   let unparsed_pattern =
     Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
   let typ = Unparser_cameligo.node_of_string' pat_type in
-  Option.map (fun x -> x,pat_message) (Pattern.pat_match unparsed_pattern typ ast)
-
+  if debug then print_endline ("PAT: " ^ Pattern.string_of_pattern unparsed_pattern);
+  if debug then print_endline ("AST: " ^ Pattern.string_of_ast Unparser_cameligo.string_of_node ast);
+  Option.map (fun x -> x,pat_message) (Pattern.pat_match ~debug unparsed_pattern typ ast)
 
 let run_depreciate unparsed dep =
   let pat = Pattern.Pat_lex dep.dep in
