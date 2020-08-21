@@ -26,6 +26,14 @@ let string_of_ast f x =
     | Ast_node (_,t,xs) -> f t ^ "%(" ^ String.concat " " (List.map aux xs) ^ "%)"
   in aux x
 
+let eq_ast x y =
+  let rec aux x y = match x,y with
+    | Ast_lex x, Ast_lex y -> x = y
+    | Ast_node (_,x,xs), Ast_node (_,y,ys) ->
+       x = y && List.for_all2 aux xs ys
+    | _ -> false
+  in aux x y
+
 exception Failure
 
 module SMap = Map.Make(String)
@@ -40,7 +48,7 @@ let add m k v =
 let print_if b x =
   if b then print_endline x
 
-let mat ?(debug=false) p f =
+let mat ?(debug=false) eq_ast p f =
   let rec mat p f = match p,f with
     | [],[] -> (* END *)
        print_if debug "END";
@@ -69,7 +77,8 @@ let mat ?(debug=false) p f =
        SMap.singleton x a1
     | (Pat_pat p1::p2, Ast_node(_,_,f1)::f2) -> (* UNPAR1 *)
        print_if debug "UNPAR1";
-       SMap.union (fun _ v1 v2 -> if v1=v2 then Some v1 else raise Failure) (mat p1 f1) (mat p2 f2)
+       SMap.union
+         (fun _ v1 v2 -> if eq_ast v1 v2 then Some v1 else raise Failure) (mat p1 f1) (mat p2 f2)
     | (p,Ast_node(_,_,f1)::f2) -> (* UNPAR2 *)
        print_if debug "UNPAR2";
        mat p (f1 @ f2)
@@ -83,7 +92,7 @@ let get_some xs =
 
 let pat_match ?(debug=false) pat typ ast =
   let is_mat ast =
-    try ignore (mat ~debug [pat] [ast]);
+    try ignore (mat ~debug eq_ast [pat] [ast]);
         match ast with
         | Ast_node (loc,_,_) -> Some (Simple_utils.Location.File loc)
         | Ast_lex _ -> Some Simple_utils.Location.generated
