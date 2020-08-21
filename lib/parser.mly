@@ -3,7 +3,7 @@
 
    let new_var =
      let counter = ref 0 in
-     fun () -> let res = string_of_int !counter in
+     fun () -> let res = "_" ^ string_of_int !counter in
                counter := !counter + 1; res
 %}
 
