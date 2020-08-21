@@ -33,4 +33,4 @@ let cmd_file =
   Term.(const main_file $ rules $ file), info
 
 let () =
-  Term.exit @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_file]
+  Term.exit_status @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_file]
