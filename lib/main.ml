@@ -1,5 +1,7 @@
 open Rules
+
 open Compile.Linter
+open Simple_utils.Trace
 
 let filter_some xs =
   List.fold_right (fun x acc -> match x with None -> acc | Some x -> x::acc) xs []
@@ -43,20 +45,40 @@ let main rules ast =
 let parse_rules buf =
   Parser.rules Lexer.token buf
 
-let parse_and_run rules str_ast =
-  let run = function
-    | Cst (Camel_cst ast) -> main rules ast
-    | _ -> [] in
-  Result.map run (ast_of_yojson (Yojson.Safe.from_string str_ast))
+let run rules = function
+  | Cst (Camel_cst ast) -> main rules ast
+  | _ -> []
 
 let serialize result =
   let yojson_result = linter_result_to_yojson result in
   Yojson.Safe.to_string yojson_result
 
 let main_serialized ~rules ~ast =
-  match parse_and_run (parse_rules rules) ast with
+  match ast_of_yojson (Yojson.Safe.from_string ast) with
   | Error e -> failwith e
-  | Ok result ->
-     match result with
+  | Ok ast ->
+     match run (parse_rules rules) ast with
      | [] -> None
      | result -> Some (serialize result)
+
+let parse_file file =
+  let%bind syntax = Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
+  Compile.Helpers.(parse_and_abstract syntax file)
+
+let string_of_result (loc,x) =
+  let buff = Buffer.create 42 in
+  let format = Format.formatter_of_buffer buff in
+  Simple_utils.Location.pp format loc;
+  Format.pp_print_flush format ();
+  Buffer.add_string buff (":\n" ^ x);
+  Buffer.contents buff
+
+let main_file ~rules ~file =
+  match parse_file file with
+  | Error _ -> assert false
+  | Ok ((_,cst),_) ->
+     match run (parse_rules rules) (Cst cst) with
+     | [] -> None
+     | results ->
+        let results = String.concat "\n" (List.map string_of_result results) in
+        Some results

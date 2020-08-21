@@ -4,4 +4,5 @@
 (library
  (name lint_ligo)
  (libraries yojson ligo.ast_typed ligo.compile ligo.decompile)
+ (preprocess (pps ppx_let))
 )

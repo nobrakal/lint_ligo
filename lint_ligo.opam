@@ -16,6 +16,7 @@ depends: [
   "menhir"
   "yojson"
   "ligo"
+  "cmdliner"
 ]
 synopsis: "A linter for the LIGO language"
 description: """

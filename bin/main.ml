@@ -1,9 +1,36 @@
-let () =
-  let rules = Lexing.from_channel (open_in Sys.argv.(1)) in
-  let ast = read_line () in
-  match Lint_ligo.Main.main_serialized ~rules ~ast with
+let main f rules =
+  let rules = Lexing.from_channel (open_in rules) in
+  match f ~rules with
   | None ->
-     exit 0
+     0
   | Some result ->
      print_endline result;
-     exit 1
+     1
+
+let main_compiler rules =
+  let ast = read_line () in
+  main (Lint_ligo.Main.main_serialized ~ast) rules
+
+let main_file rules file =
+  main (Lint_ligo.Main.main_file ~file) rules
+
+open Cmdliner
+
+let rules =
+  let doc = "Rules for the linter." in
+    Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"RULES_FILE")
+
+let file =
+  let doc = "The LIGO file to lint." in
+  Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
+
+let cmd_compiler =
+  let info = Term.info "compiler" in
+  Term.(const main_compiler $ rules), info
+
+let cmd_file =
+  let info = Term.info "file" in
+  Term.(const main_file $ rules $ file), info
+
+let () =
+  Term.exit @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_file]
