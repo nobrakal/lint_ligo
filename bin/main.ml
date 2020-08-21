@@ -20,7 +20,7 @@ let rules =
   let doc = "Rules for the linter." in
     Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"RULES_FILE")
 
-let file =
+let lint =
   let doc = "The LIGO file to lint." in
   Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
 
@@ -30,7 +30,7 @@ let cmd_compiler =
 
 let cmd_file =
   let info = Term.info "file" in
-  Term.(const main_file $ rules $ file), info
+  Term.(const main_file $ rules $ lint), info
 
 let () =
   Term.exit_status @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_file]
