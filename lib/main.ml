@@ -67,12 +67,14 @@ let serialize result =
 
 let main_serialized ~rules ~ast =
   match ast_of_yojson (Yojson.Safe.from_string ast) with
-  | Error e -> failwith e
+  | Error e ->
+     Error (Errors.Ast_parsing e)
   | Ok ast ->
-     match run (parse_rules rules) ast with
-     | Error e -> failwith (Errors.to_string e)
-     | Ok [] -> None
-     | Ok result -> Some (serialize result)
+     Result.map
+       (function
+        | [] -> None
+        | result -> Some (serialize result))
+     @@ run (parse_rules rules) ast
 
 let parse_file file =
   let%bind syntax = Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
@@ -88,11 +90,13 @@ let string_of_result (loc,x) =
 
 let main_file ~rules ~file =
   match parse_file file with
-  | Error _ -> assert false
+  | Error xs ->
+     Error (Errors.Compiler xs)
   | Ok ((_,cst),_) ->
-     match run (parse_rules rules) (Cst cst) with
-     | Error e -> failwith (Errors.to_string e)
-     | Ok [] -> None
-     | Ok results ->
-        let results = String.concat "\n" (List.map string_of_result results) in
-        Some results
+     Result.map
+       (function
+        | [] -> None
+        | results ->
+           let results = String.concat "\n" (List.map string_of_result results) in
+           Some results)
+     @@ run (parse_rules rules) (Cst cst)

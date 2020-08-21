@@ -1,11 +1,14 @@
 let main f rules =
   let rules = Lexing.from_channel (open_in rules) in
   match f ~rules with
-  | None ->
+  | Ok None ->
      0
-  | Some result ->
+  | Ok (Some result) ->
      print_endline result;
      1
+  | Error e ->
+     print_endline (Lint_ligo.Errors.to_string e);
+     2
 
 let main_compiler rules =
   let ast = read_line () in
