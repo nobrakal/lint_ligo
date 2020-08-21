@@ -7,8 +7,8 @@ val string_of_pattern : 'a pattern -> string
 
 type 'a ast =
   | Ast_lex of string
-  | Ast_node of 'a * 'a ast list
+  | Ast_node of Simple_utils.Region.t * 'a * 'a ast list
 
 val string_of_ast : ('a -> string) -> 'a ast -> string
 
-val pat_match : ?debug:bool -> 'a pattern -> 'a -> 'a ast -> bool
+val pat_match : ?debug:bool -> 'a pattern -> 'a -> 'a ast -> Simple_utils.Location.t option

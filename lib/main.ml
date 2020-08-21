@@ -4,22 +4,30 @@ open Compile.Linter
 let filter_some xs =
   List.fold_right (fun x acc -> match x with None -> acc | Some x -> x::acc) xs []
 
-let pattern ast {pat; pat_type; pat_message} =
+let make_dep_msg {dep; dep_version; dep_replacement; dep_message} =
+  let with_default f = Option.fold ~none:"" ~some:f in
+  let repl = with_default (fun x -> "A possible replacement is " ^ x ^ ".") dep_replacement in
+  let mess = with_default (fun x -> " " ^ x ^ ".") dep_message in
+  dep ^ " was depreciated in version "  ^ dep_version ^ "." ^ repl ^ mess
+
+let pattern {pat; pat_type; pat_message} ast =
   let unparsed_pattern =
     Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
   let typ = Unparser_cameligo.node_of_string' pat_type in
-  if Pattern.pat_match unparsed_pattern typ ast
-  then Some (Simple_utils.Location.generated, pat_message)
-  else None
+  Option.map (fun x -> x,pat_message) (Pattern.pat_match unparsed_pattern typ ast)
 
-let run ast = function
-  | Depreciate dep -> Depreciate.depreciate ast dep
+let run ast x =
+  let unparsed = Unparser_cameligo.unparse_cst ast in
+  match x with
+  | Depreciate dep ->
+     let pat = Pattern.Pat_lex dep.dep in
+     List.map (fun x -> x,make_dep_msg dep)
+       (filter_some (List.map (Pattern.pat_match pat Unparser_cameligo.Name) unparsed))
   | Pattern pat ->
-     let unparsed = Unparser_cameligo.unparse_cst ast in
-     pattern unparsed pat
+     filter_some (List.map (pattern pat) unparsed)
 
 let main rules ast =
-  filter_some @@ List.map (run ast) rules
+  List.(concat (map (run ast) rules))
 
 let parse_rules buf =
   Parser.rules Lexer.token buf

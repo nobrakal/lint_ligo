@@ -12,18 +12,18 @@ let string_of_pattern x =
 
 type 'a ast =
   | Ast_lex of string
-  | Ast_node of 'a * 'a ast list
+  | Ast_node of Simple_utils.Region.t * 'a * 'a ast list
 
 let thunked_fold_ast lex node x =
   let rec aux = function
     | Ast_lex s -> lex s
-    | Ast_node (t,n) -> node t n (fun () -> List.map aux n)
+    | Ast_node (p,t,n) -> node p t n (fun () -> List.map aux n)
   in aux x
 
 let string_of_ast f x =
   let rec aux = function
     | Ast_lex x -> x
-    | Ast_node (t,xs) -> f t ^ "%(" ^ String.concat " " (List.map aux xs) ^ "%)"
+    | Ast_node (_,t,xs) -> f t ^ "%(" ^ String.concat " " (List.map aux xs) ^ "%)"
   in aux x
 
 exception Failure
@@ -48,29 +48,29 @@ let mat ?(debug=false) p f =
     | Pat_lex l1::p, Ast_lex l2::f when l1 = l2 -> (* ELIM *)
        print_if debug "ELIM";
        mat p f
-    | Pat_var(x,None)::Pat_lex l1::p, Ast_node(c,f1)::Ast_lex l2::f2 when l1 = l2 -> (* BIND1 *)
+    | Pat_var(x,None)::Pat_lex l1::p, (Ast_node _ as a1)::Ast_lex l2::f2 when l1 = l2 -> (* BIND1 *)
        print_if debug "BIND1";
-       add (mat p f2) x (Ast_node(c,f1))
-    | (Pat_var(x,Some c1)::Pat_lex l1::p, Ast_node(c2,f1)::Ast_lex(l2)::f2)
+       add (mat p f2) x a1
+    | (Pat_var(x,Some c1)::Pat_lex l1::p, (Ast_node(_,c2,_) as a1)::Ast_lex(l2)::f2)
          when l1 = l2 && c1 = c2 -> (* BIND1 typed *)
        print_if debug "BIND1T";
-       add (mat p f2) x (Ast_node(c2,f1))
-    | (Pat_var(x,None)::p, Ast_node(c,f1)::(Ast_node(_,_)::_ as f2)) -> (* BIND2 *)
+       add (mat p f2) x a1
+    | (Pat_var(x,None)::p, (Ast_node _ as a1) ::(Ast_node(_,_,_)::_ as f2)) -> (* BIND2 *)
        print_if debug "BIND2";
-       add (mat p f2) x (Ast_node(c,f1))
-    | (Pat_var(x,Some c)::p, Ast_node(c1,f1)::(Ast_node(_,_)::_ as f2)) when c = c1 -> (* BIND2 typed *)
+       add (mat p f2) x a1
+    | (Pat_var(x,Some c)::p, (Ast_node(_,c1,_) as a1)::(Ast_node(_,_,_)::_ as f2)) when c = c1 -> (* BIND2 typed *)
        print_if debug "BIND1T";
-       add (mat p f2) x (Ast_node(c1,f1))
-    | ([Pat_var(x,None)], [Ast_node(c,f)]) -> (* BIND3 *)
+       add (mat p f2) x a1
+    | ([Pat_var(x,None)], [Ast_node _ as a1]) -> (* BIND3 *)
        print_if debug "BIND3";
-       SMap.singleton x (Ast_node(c,f))
-    | ([Pat_var(x,Some c1)], [Ast_node(c,f)]) when c1 = c -> (* BIND3 typed *)
+       SMap.singleton x a1
+    | ([Pat_var(x,Some c1)], [Ast_node(_,c,_) as a1]) when c1 = c -> (* BIND3 typed *)
        print_if debug "BIND3T";
-       SMap.singleton x (Ast_node(c,f))
-    | (Pat_pat p1::p2, Ast_node(_,f1)::f2) -> (* UNPAR1 *)
+       SMap.singleton x a1
+    | (Pat_pat p1::p2, Ast_node(_,_,f1)::f2) -> (* UNPAR1 *)
        print_if debug "UNPAR1";
        SMap.union (fun _ v1 v2 -> if v1=v2 then Some v1 else raise Failure) (mat p1 f1) (mat p2 f2)
-    | (p,Ast_node(_,f1)::f2) -> (* UNPAR2 *)
+    | (p,Ast_node(_,_,f1)::f2) -> (* UNPAR2 *)
        print_if debug "UNPAR2";
        mat p (f1 @ f2)
     | _ ->
@@ -78,13 +78,22 @@ let mat ?(debug=false) p f =
        raise Failure
   in mat p f
 
-let ors = List.fold_left (||) false
+let get_some xs =
+  List.fold_left (fun acc x -> match acc with Some _ -> acc | None -> x) None xs
 
-let pat_match ?(debug=false) p typ f =
-  let is_mat f =
-    try ignore (mat ~debug [p] [f]); true
-    with Failure -> false in
-  let lex _ = false in
-  let node typ' xs thunk =
-    (typ = typ' && (is_mat (Ast_node (typ,xs)))) || ors (thunk ()) in
-  thunked_fold_ast lex node f
+let pat_match ?(debug=false) pat typ ast =
+  let is_mat ast =
+    try ignore (mat ~debug [pat] [ast]);
+        match ast with
+        | Ast_node (loc,_,_) -> Some (Simple_utils.Location.File loc)
+        | Ast_lex _ -> Some Simple_utils.Location.generated
+    with Failure -> None in
+  let lex _ = None in
+  let node reg typ' xs thunk =
+    if typ=typ'
+    then
+      match is_mat (Ast_node (reg,typ,xs)) with
+      | Some _ as x -> x
+      | None -> get_some (thunk ())
+    else get_some (thunk ()) in
+  thunked_fold_ast lex node ast

@@ -15,4 +15,4 @@ val string_of_node : node -> string
 val node_of_string : string -> node option
 val node_of_string' : string -> node
 
-val unparse_cst : Cameligo.CST.t -> node Pattern.ast
+val unparse_cst : Cameligo.CST.t -> node Pattern.ast list
