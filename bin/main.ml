@@ -18,19 +18,21 @@ open Cmdliner
 
 let rules =
   let doc = "Rules for the linter." in
-    Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"RULES_FILE")
+  Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"RULES_FILE")
 
 let lint =
   let doc = "The LIGO file to lint." in
   Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
 
 let cmd_compiler =
-  let info = Term.info "compiler" in
+  let doc = "Subcommand: interface with the LIGO compiler." in
+  let info = Term.info ~doc "compiler" in
   Term.(const main_compiler $ rules), info
 
-let cmd_file =
-  let info = Term.info "file" in
+let cmd_lint =
+  let doc = "Subcommand: lint a file with the given rules." in
+  let info = Term.info ~doc "file" in
   Term.(const main_file $ rules $ lint), info
 
 let () =
-  Term.exit_status @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_file]
+  Term.exit_status @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_lint]
