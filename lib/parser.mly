@@ -5,6 +5,13 @@
      let counter = ref 0 in
      fun () -> let res = "_" ^ string_of_int !counter in
                counter := !counter + 1; res
+
+   exception Bad_node of string
+
+   let node_of_string' x =
+     match Unparser_cameligo.node_of_string x with
+     | Some x -> x
+     | None -> raise (Bad_node x)
 %}
 
 %token EOF
@@ -48,6 +55,6 @@ unparsed_pattern:
 pattern:
 | x=Word { Pat_lex x }
 | x=TVar { let id,typ = x in
-           Pat_var (id, Option.map Unparser_cameligo.node_of_string' typ)}
-| typ=TWild { Pat_var (new_var (), Option.map Unparser_cameligo.node_of_string' typ)}
+           Pat_var (id, Option.map node_of_string' typ)}
+| typ=TWild { Pat_var (new_var (), Option.map node_of_string' typ)}
 | MLP xs=nonempty_list(pattern) MRP { Pat_pat xs }

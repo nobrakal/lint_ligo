@@ -50,11 +50,6 @@ let node_of_string = function
   | "keyword" -> Some Keyword
   | _ -> None
 
-let node_of_string' x =
-  match node_of_string x with
-  | Some x -> x
-  | None -> failwith ("node_of_string: " ^ x)
-
 type nonrec ast = node ast
 
 let node t xs pos = Ast_node (pos, t, xs)
