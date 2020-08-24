@@ -1,6 +1,6 @@
 open Simple_utils.Region
 open Cameligo.CST
-open Pattern
+open Ast
 
 type node =
   | Declarations
@@ -50,7 +50,7 @@ let node_of_string = function
   | "keyword" -> Some Keyword
   | _ -> None
 
-type nonrec ast = node ast
+type ast = node Ast.t
 
 let node t xs pos = Ast_node (pos, t, xs)
 
@@ -482,10 +482,9 @@ let print_type_decl x =
   let xs = [K.kwd_type kwd_type; rlex name; K.equal eq; print_type_expr x.region type_expr] in
   node TypeDecl xs x.region
 
-
 let declaration = function
   | Let xs -> print_let_decl xs
   | TypeDecl xs -> print_type_decl xs
 
-let unparse_cst : Cameligo.CST.t -> node Pattern.ast list =
+let unparse_cst : Cameligo.CST.t -> node Ast.t list =
   fun cst -> List.map declaration (Utils.nseq_to_list cst.decl)

@@ -3,6 +3,6 @@
 
 (library
  (name lint_ligo)
- (libraries yojson ligo.ast_typed ligo.compile ligo.decompile)
+ (libraries yojson ligo.ast_typed ligo.compile ligo.decompile unparser)
  (preprocess (pps ppx_let))
 )

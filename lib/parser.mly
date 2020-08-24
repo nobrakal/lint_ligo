@@ -9,7 +9,7 @@
    exception Bad_node of string
 
    let node_of_string' x =
-     match Unparser_cameligo.node_of_string x with
+     match Unparser.Unparser_cameligo.node_of_string x with
      | Some x -> x
      | None -> raise (Bad_node x)
 %}
@@ -31,7 +31,7 @@
 %token<string * string option> TVar
 %token MLP MRP
 %token<string option> TWild
-%start<Unparser_cameligo.node Pattern.pattern> unparsed_pattern
+%start<Unparser.Unparser_cameligo.node Pattern.pattern> unparsed_pattern
 
 %%
 

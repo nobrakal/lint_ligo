@@ -24,27 +24,27 @@ let make_dep_msg {dep; dep_version; dep_replacement; dep_message} =
 let pattern ?(debug=false) {pat; pat_type; pat_message} ast =
   let unparsed_pattern =
     Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
-  match Unparser_cameligo.node_of_string pat_type with
+  match Unparser.Unparser_cameligo.node_of_string pat_type with
   | None -> Error (Errors.Bad_type pat_type)
   | Some typ ->
      if debug then
        print_endline ("PAT: " ^ Pattern.string_of_pattern unparsed_pattern);
      if debug then
-       print_endline ("AST: " ^ Pattern.string_of_ast Unparser_cameligo.string_of_node ast);
+       print_endline ("AST: " ^ Unparser.Ast.string_of_ast Unparser.Unparser_cameligo.string_of_node ast);
      let pat_result = Pattern.pat_match ~debug unparsed_pattern typ ast in
      Ok (Option.map (fun x -> x,pat_message) pat_result)
 
 let run_depreciate unparsed dep =
   let pat = Pattern.Pat_lex dep.dep in
   List.map (fun x -> x,make_dep_msg dep)
-    (filter_some (List.map (Pattern.pat_match pat Unparser_cameligo.Name) unparsed))
+    (filter_some (List.map (Pattern.pat_match pat Unparser.Unparser_cameligo.Name) unparsed))
 
 let run_pattern unparsed pat =
   Result.map filter_some (sequence_result (List.map (pattern pat) unparsed))
 
 (* Run the rule on the given AST *)
 let run ast x =
-  let unparsed = Unparser_cameligo.unparse_cst ast in
+  let unparsed = Unparser.Unparser_cameligo.unparse_cst ast in
   match x with
   | Depreciate dep ->
      Ok (run_depreciate unparsed dep)
@@ -56,6 +56,10 @@ let main rules ast =
 
 let parse_rules buf =
   Parser.rules Lexer.token buf
+
+let bind_compiler_result x f = match x with
+  | Error e -> Error (Errors.Compiler e)
+  | Ok x -> f (fst x)
 
 let run rules = function
   | Cst (Camel_cst ast) -> main rules ast
@@ -89,10 +93,8 @@ let string_of_result (loc,x) =
   Buffer.contents buff
 
 let main_file ~rules ~file =
-  match parse_file file with
-  | Error xs ->
-     Error (Errors.Compiler xs)
-  | Ok ((_,cst),_) ->
+  bind_compiler_result (parse_file file)
+  @@ fun (_,cst) ->
      Result.map
        (function
         | [] -> None
