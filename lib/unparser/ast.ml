@@ -21,3 +21,17 @@ let eq_ast x y =
        x = y && List.for_all2 aux xs ys
     | _ -> false
   in aux x y
+
+let unreg f x = f x.Simple_utils.Region.value
+
+let node t xs pos = Ast_node (pos, t, xs)
+
+let opt_to_list f x = Option.fold ~none:[] ~some:(fun x -> f x) x
+
+let print_nsepseq f g (x,xs) =
+  g x :: List.(concat (map (fun (x,y) -> [f x; g y]) xs))
+
+let print_sepseq f g xs =
+  match xs with
+  | None -> []
+  | Some xs -> print_nsepseq f g xs

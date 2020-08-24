@@ -52,8 +52,6 @@ let node_of_string = function
 
 type ast = node Ast.t
 
-let node t xs pos = Ast_node (pos, t, xs)
-
 let lex x = node Name [Ast_lex x]
 
 let rlex x = lex x.value x.region
@@ -139,21 +137,9 @@ module K = struct
 
 end
 
-let unreg f x = f x.value
-
 let print_par f x =
   let {lpar;inside;rpar} = x.value in
   Ast_node (x.region, Par, K.lpar lpar :: f inside @ [K.rpar rpar])
-
-let opt_to_list f x = Option.fold ~none:[] ~some:(fun x -> f x) x
-
-let print_nsepseq f g (x,xs) =
-  g x :: List.(concat (map (fun (x,y) -> [f x; g y]) xs))
-
-let print_sepseq f g xs =
-  match xs with
-  | None -> []
-  | Some xs -> print_nsepseq f g xs
 
 let print_attribute x =
   node Attribute ([K.annot x.region; rlex x; K.rbracket x.region]) x.region
