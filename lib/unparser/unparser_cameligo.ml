@@ -169,7 +169,6 @@ let rec print_let_decl x =
     @ print_attributes attributes in
   node LetDecl xs x.region
 
-
 and print_pattern pos x =
   let xs = match x with
       PConstr   p -> print_pconstr p

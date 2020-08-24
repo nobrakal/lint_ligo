@@ -1,24 +1,8 @@
 open Rules
+open Utils
 
 open Compile.Linter
 open Simple_utils.Trace
-
-let filter_some xs =
-  List.fold_right (fun x acc -> match x with None -> acc | Some x -> x::acc) xs []
-
-let sequence_result xs =
-  let add_if_possible x acc =
-    match x,acc with
-    | Ok x,Ok xs -> Ok (x::xs)
-    | (Error _ as e),_ | _,(Error _ as e) -> e in
-  List.fold_right add_if_possible xs (Ok [])
-
-(* Create the message for a depreciated function *)
-let make_dep_msg {dep; dep_version; dep_replacement; dep_message} =
-  let with_default f = Option.fold ~none:"" ~some:f in
-  let repl = with_default (fun x -> "A possible replacement is " ^ x ^ ".") dep_replacement in
-  let mess = with_default (fun x -> " " ^ x ^ ".") dep_message in
-  dep ^ " was depreciated in version "  ^ dep_version ^ "." ^ repl ^ mess
 
 (* Parse and run a pattern matching *)
 let pattern ?(debug=false) {pat; pat_type; pat_message} ast =
@@ -34,24 +18,26 @@ let pattern ?(debug=false) {pat; pat_type; pat_message} ast =
      let pat_result = Pattern.pat_match ~debug unparsed_pattern typ ast in
      Ok (Option.map (fun x -> x,pat_message) pat_result)
 
-let run_depreciate unparsed dep =
-  let pat = Pattern.Pat_lex dep.dep in
-  List.map (fun x -> x,make_dep_msg dep)
-    (filter_some (List.map (Pattern.pat_match pat Unparser.Unparser_cameligo.Name) unparsed))
-
 let run_pattern unparsed pat =
   Result.map filter_some (sequence_result (List.map (pattern pat) unparsed))
 
 (* Run the rule on the given AST *)
-let run ast x =
+let run_cst ast x =
   let unparsed = Unparser.Unparser_cameligo.unparse_cst ast in
   match x with
-  | Depreciate dep ->
-     Ok (run_depreciate unparsed dep)
+  | Depreciate _ ->
+     Ok []
   | Pattern pat ->
      run_pattern unparsed pat
 
-let main rules ast =
+let run_typed ast x =
+  match x with
+  | Depreciate dep ->
+     Ok (Depreciate.run dep Compile.Helpers.CameLIGO ast)
+  | Pattern _ ->
+     Ok []
+
+let main run rules ast =
   Result.map List.concat @@ sequence_result @@ List.map (run ast) rules
 
 let parse_rules buf =
@@ -62,7 +48,8 @@ let bind_compiler_result x f = match x with
   | Ok x -> f (fst x)
 
 let run rules = function
-  | Cst (Camel_cst ast) -> main rules ast
+  | Cst (Camel_cst ast) -> main run_cst rules ast
+  | Typed ast -> main run_typed rules ast
   | _ -> Ok []
 
 let serialize result =
