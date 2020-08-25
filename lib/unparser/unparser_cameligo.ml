@@ -1,6 +1,8 @@
 open Simple_utils.Region
 open Cameligo.CST
+
 open Ast
+open Common
 
 type node =
   | Declarations
@@ -146,18 +148,6 @@ let print_attribute x =
 
 let print_attributes xs = List.map print_attribute xs
 
-let print_int x =
-  let (_,value) = x.value in
-  lex (Z.to_string value) x.region
-
-let print_nat x =
-  let (_,value) = x.value in
-  lex (Z.to_string value ^ "n") x.region
-
-let print_mutez x =
-  let (_,value) = x.value in
-  lex (Z.to_string value ^ "mutez") x.region
-
 let print_unit (lpar,rpar) = [K.lpar lpar; K.rpar rpar]
 
 let rec print_let_decl x =
@@ -174,9 +164,9 @@ and print_pattern pos x =
       PConstr   p -> print_pconstr p
     | PUnit     u -> unreg print_unit u
     | PVar      v -> [rlex v]
-    | PInt      i -> [print_int i]
-    | PNat      n -> [print_nat n]
-    | PBytes    b -> [print_bytes b]
+    | PInt      i -> [print_int lex i]
+    | PNat      n -> [print_nat lex n]
+    | PBytes    b -> [print_bytes lex b]
     | PString   s -> print_string (String s)
     | PVerbatim s -> print_string (Verbatim s)
     | PWild     w -> [K.wild w]
@@ -225,8 +215,6 @@ and print_ptyped x =
 
 and print_binders loc xs = List.map (print_pattern loc) (Utils.nseq_to_list xs)
 
-and print_bytes e = lex ("0x" ^ Hex.show (snd e.value)) e.region
-
 and print_let_binding loc {binders;lhs_type;let_rhs;eq} =
   print_binders loc binders
   @ (opt_to_list (fun (c,l) -> [K.colon c; print_type_expr loc l]) lhs_type)
@@ -248,7 +236,7 @@ and print_expr loc x =
     | EUpdate     e -> print_update e
     | EVar        v -> [rlex v]
     | ECall       e -> print_call e
-    | EBytes      e -> [print_bytes e]
+    | EBytes      e -> [print_bytes lex e]
     | EUnit       u -> unreg print_unit u
     | ETuple      e -> print_tuple e
     | EPar        e -> [print_par (fun x -> [print_expr e.region x]) e]
@@ -394,9 +382,9 @@ and print_arith_expr = function
   | Div   e -> print_bin_op K.slash   e
   | Mod   e -> print_bin_op K.kwd_mod e
   | Neg   e -> print_un_op K.minus    e
-  | Int   e -> [print_int e]
-  | Nat   e -> [print_nat e]
-  | Mutez e -> [print_mutez e]
+  | Int   e -> [print_int lex e]
+  | Nat   e -> [print_nat lex e]
+  | Mutez e -> [print_mutez lex e]
 
 and print_cond x =
   let {kwd_if; test; kwd_then; ifso; ifnot} = x.value in
