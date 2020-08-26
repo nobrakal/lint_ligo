@@ -14,10 +14,10 @@ To build the executable, just run `dune build bin/main.exe`.
 The command
 
 ```
-lint_ligo lint file.rules file.mligo
+lint_ligo lint file.rules file.mligo entrypoint
 ```
 
-will lint `file.mligo` using the rules in `file.rules`.
+will lint `file.mligo` (with entry point `entrypoint`) using the rules in `file.rules`.
 
 Note that currently, it will lint only CameLIGO and PascaLIGO files.
 
@@ -29,6 +29,11 @@ A rules file contains a language and a list of rule. The file must follow the fo
 <rules> ::=
   language <lang>
   list(<rule>)
+
+<lang> ::=
+  | CameLIGO
+  | PascaLIGO
+  | ReasonLIGO
 
 <rule> ::=
   | pattern <type> %{ <pattern> %} message "<text>"
@@ -44,13 +49,6 @@ A rules file contains a language and a list of rule. The file must follow the fo
   | %( <pattern> %) (* a pattern in a sub-tree *)
   | <word> (* Any word *)
 ```
-
-The `<lang>` must be one of:
-
-* `CameLIGO`
-* `PascaLIGO`
-* `ReasonLIGO`
-
 ### Depreciation
 
 You can mark a function name as depreciated. It must be followed by a version tag, and may be followed by a suggested replacement and/or a custom message.

@@ -14,8 +14,8 @@ let main_compiler rules =
   let ast = read_line () in
   main (Lint_ligo.Main.main_serialized ~ast) rules
 
-let main_file rules file =
-  main (Lint_ligo.Main.main_file ~file) rules
+let main_file rules file entry_point =
+  main (Lint_ligo.Main.main_file ~file ~entry_point) rules
 
 open Cmdliner
 
@@ -23,9 +23,13 @@ let rules =
   let doc = "Rules for the linter." in
   Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"RULES_FILE")
 
-let lint =
-  let doc = "The LIGO file to lint." in
+let file =
+  let doc = "The LIGO contract to lint." in
   Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
+
+let entry_point =
+  let doc = "The entry point of the contract." in
+  Arg.(required & pos 2 (some string) None & info [] ~doc ~docv:"ENTRY_POINT")
 
 let cmd_default =
   let doc = "Ligo Linter" in
@@ -40,7 +44,7 @@ let cmd_compiler =
 let cmd_lint =
   let doc = "Subcommand: lint a file with the given rules." in
   let info = Term.info ~doc "lint" in
-  Term.(const main_file $ rules $ lint), info
+  Term.(const main_file $ rules $ file $ entry_point), info
 
 let () =
   Term.exit_status @@ Term.eval_choice cmd_default [cmd_compiler; cmd_lint]

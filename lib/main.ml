@@ -15,10 +15,6 @@ let main run rules ast =
 let parse_rules buf =
   Rules.rules_of_parsed @@ Parser.rules Lexer.token buf
 
-let bind_compiler_result x f = match x with
-  | Error e -> Error (Errors.Compiler e)
-  | Ok x -> f (fst x)
-
 let run {lang;deps;pats} = function
   | Typed ast -> main (run_typed lang) deps ast
   | Cst cst ->
@@ -44,10 +40,20 @@ let main_serialized ~rules ~ast =
      let%bind result = run rules ast in
      Ok (list_map_to_opt serialize result)
 
+let from_compiler_result x = match x with
+  | Ok (x,_) -> Ok x
+  | Error e  -> Error (Errors.Compiler e)
+
 let parse_file file =
-  match Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) with
-  | Ok (syntax,_) -> Compile.Helpers.(parse_and_abstract syntax file)
-  | Error e -> Error e
+  let%bind syntax =
+    from_compiler_result @@ Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
+  from_compiler_result @@ Compile.Helpers.(parse_and_abstract syntax file)
+
+let compile_to_typed entry_point imperative =
+  let%bind sugar   = from_compiler_result @@ Compile.Of_imperative.compile imperative in
+  let%bind core    = from_compiler_result @@ Compile.Of_sugar.compile sugar in
+  let%bind  typed,_ = from_compiler_result @@ Compile.Of_core.(compile (Contract entry_point) core) in
+  Ok typed
 
 let string_of_result (loc,x) =
   let buff = Buffer.create 42 in
@@ -61,9 +67,10 @@ let prepare_result_file =
   list_map_to_opt @@
     fun result ->  String.concat "\n" (List.map string_of_result result)
 
-let main_file ~rules ~file =
-  bind_compiler_result (parse_file file)
-  @@ fun (_,cst) ->
-     let%bind rules = parse_rules rules in
-     let%bind result = run rules (Cst cst) in
-     Ok (prepare_result_file result)
+let main_file ~rules ~file ~entry_point =
+  let%bind rules   = parse_rules rules in
+  let%bind (imperative,cst) = parse_file file in
+  let%bind ast = compile_to_typed entry_point imperative in
+  let%bind result_cst = run rules (Cst cst) in
+  let%bind result_ast = run rules (Typed ast) in
+  Ok (prepare_result_file (result_cst @ result_ast))
