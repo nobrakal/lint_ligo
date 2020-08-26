@@ -12,6 +12,13 @@ let string_of_pattern x =
     | Pat_var (s,_) -> s
   in aux x
 
+let map_type_pattern f x =
+  let rec aux = function
+    | Pat_lex x -> Pat_lex x
+    | Pat_pat xs -> Pat_pat (List.map aux xs)
+    | Pat_var (s,x) -> Pat_var (s, Option.map f x) in
+  aux x
+
 exception Failure
 
 module SMap = Map.Make(String)

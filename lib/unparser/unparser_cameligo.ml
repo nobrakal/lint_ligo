@@ -4,6 +4,8 @@ open Cameligo.CST
 open Ast
 open Common
 
+type cst = Cameligo.CST.t
+
 type node =
   | Declarations
   | LetDecl | TypeDecl

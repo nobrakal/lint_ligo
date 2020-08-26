@@ -1,3 +1,5 @@
+type cst = Pascaligo.CST.t
+
 type node =
   | Name | Keyword
   | AttributeDeclaration | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration
@@ -15,4 +17,4 @@ type node =
 val string_of_node : node -> string
 val node_of_string : string -> node option
 
-val unparse_cst : Pascaligo.CST.t -> node Ast.t list
+val unparse_cst : cst -> node Ast.t list

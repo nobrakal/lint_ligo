@@ -1,3 +1,5 @@
+type cst = Cameligo.CST.t
+
 type node =
   | Declarations
   | LetDecl | TypeDecl
@@ -15,4 +17,4 @@ val string_of_node : node -> string
 
 val node_of_string : string -> node option
 
-val unparse_cst : Cameligo.CST.t -> node Ast.t list
+val unparse_cst : cst -> node Ast.t list

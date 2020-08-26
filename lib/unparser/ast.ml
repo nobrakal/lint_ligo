@@ -22,6 +22,12 @@ let eq_ast x y =
     | _ -> false
   in aux x y
 
+let map_node f x =
+  let rec aux = function
+    | Ast_lex x -> Ast_lex x
+    | Ast_node (a,b,c) -> Ast_node (a, f b, List.map aux c)
+  in aux x
+
 let unreg f x = f x.Simple_utils.Region.value
 
 let node t xs pos = Ast_node (pos, t, xs)

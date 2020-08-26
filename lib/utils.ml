@@ -7,3 +7,8 @@ let sequence_result xs =
     | Ok x,Ok xs -> Ok (x::xs)
     | (Error _ as e),_ | _,(Error _ as e) -> e in
   List.fold_right add_if_possible xs (Ok [])
+
+let list_map_to_opt f xs =
+  match xs with
+  | [] -> None
+  | xs -> Some (f xs)

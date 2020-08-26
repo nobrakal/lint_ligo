@@ -10,6 +10,7 @@ val thunked_fold_ast :
   'b t -> 'a
 
 val eq_ast : 'a t -> 'a t -> bool
+val map_node : ('a -> 'b) -> 'a t -> 'b t
 
 val unreg : ('a -> 'b) -> 'a Simple_utils.Region.reg -> 'b
 

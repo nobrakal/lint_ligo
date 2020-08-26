@@ -14,3 +14,5 @@ type annoted_pattern =
 type rule =
   | Depreciate of depreciate
   | Pattern of annoted_pattern
+
+val split : rule list -> depreciate list * annoted_pattern list

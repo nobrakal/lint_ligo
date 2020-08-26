@@ -4,6 +4,8 @@ open Pascaligo.CST
 open Ast
 open Common
 
+type cst = Pascaligo.CST.t
+
 type node =
   | Name | Keyword
   | AttributeDeclaration | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration

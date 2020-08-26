@@ -14,3 +14,10 @@ type annoted_pattern =
 type rule =
   | Depreciate of depreciate
   | Pattern of annoted_pattern
+
+let split xs =
+  let aux x (deps,pats) =
+    match x with
+    | Depreciate x -> (x::deps,pats)
+    | Pattern x -> (deps,x::pats) in
+  List.fold_right aux xs ([],[])
