@@ -84,7 +84,7 @@ module K = struct
 
   let kwd_end       = kwd "end"
   let kwd_type      = kwd "type"
-  let kwd_is        = kwd "id"
+  let kwd_is        = kwd "is"
   let kwd_const     = kwd "const"
   let kwd_recursive = kwd "recursive"
   let kwd_function  = kwd "function"
