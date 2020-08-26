@@ -15,4 +15,15 @@ type rule =
   | Depreciate of depreciate
   | Pattern of annoted_pattern
 
-val split : rule list -> depreciate list * annoted_pattern list
+type parsed_rules =
+  { plang : string;
+    prules: rule list
+  }
+
+type rules =
+  { lang : Compile.Helpers.v_syntax;
+    deps : depreciate list;
+    pats : annoted_pattern list
+  }
+
+val rules_of_parsed : parsed_rules -> (rules, Errors.t) result

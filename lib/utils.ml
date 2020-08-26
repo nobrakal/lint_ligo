@@ -12,3 +12,13 @@ let list_map_to_opt f xs =
   match xs with
   | [] -> None
   | xs -> Some (f xs)
+
+module Let_syntax = struct
+  let return x = Ok x
+  let map x ~f = Result.map f x
+  let bind x ~f = Result.bind x f
+  let both x y =
+    match x,y with
+    | Ok x, Ok y -> Ok (x,y)
+    | Error e,_ | _, Error e -> Error e
+end

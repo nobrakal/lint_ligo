@@ -30,7 +30,7 @@ let lint =
 let cmd_default =
   let doc = "Ligo Linter" in
   let info = Term.info ~doc "ligo_lint" in
-  Term.(const 1), info
+  Term.(const 3), info
 
 let cmd_compiler =
   let doc = "Subcommand: interface with the LIGO compiler." in

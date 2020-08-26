@@ -56,6 +56,7 @@ rule token = parse
   | "message" { MESSAGE }
   | "in" { IN }
   | "pattern" { PATTERN }
+  | "language" { LANGUAGE }
 
   | '"'  { Buffer.clear str_buff ; str lexbuf }
   | "%{" { Buffer.clear pat_buff ; pattern lexbuf }

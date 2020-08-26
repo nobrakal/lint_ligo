@@ -13,11 +13,13 @@
 %token DEPRECIATE IN REPLACEMENT MESSAGE
 %token PATTERN
 
+%token LANGUAGE
+
 %token<string> String
 
 %token<string> FullyEscapedString
 
-%start<Rules.rule list> rules
+%start<Rules.parsed_rules> rules
 
 (* For unparsed patterns *)
 %token<string> Word
@@ -28,7 +30,8 @@
 
 %%
 
-rules: xs=list(rule) EOF { xs }
+rules:
+| LANGUAGE plang=String prules=list(rule) EOF { {plang;prules} }
 
 rule:
 | DEPRECIATE dep=String IN dep_version=String dep_replacement=option(replacement) dep_message=option(message)
