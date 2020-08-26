@@ -27,6 +27,11 @@ let lint =
   let doc = "The LIGO file to lint." in
   Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
 
+let cmd_default =
+  let doc = "Ligo Linter" in
+  let info = Term.info ~doc "ligo_lint" in
+  Term.(const 1), info
+
 let cmd_compiler =
   let doc = "Subcommand: interface with the LIGO compiler." in
   let info = Term.info ~doc "compiler" in
@@ -34,8 +39,8 @@ let cmd_compiler =
 
 let cmd_lint =
   let doc = "Subcommand: lint a file with the given rules." in
-  let info = Term.info ~doc "file" in
+  let info = Term.info ~doc "lint" in
   Term.(const main_file $ rules $ lint), info
 
 let () =
-  Term.exit_status @@ Term.eval_choice cmd_compiler [cmd_compiler; cmd_lint]
+  Term.exit_status @@ Term.eval_choice cmd_default [cmd_compiler; cmd_lint]
