@@ -4,19 +4,72 @@ open Pascaligo.CST
 open Ast
 open Common
 
-(*  TODO use print_bracket *)
-
 type node =
   | Name | Keyword
   | AttributeDeclaration | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration
   | Par | Brace | Bracket
-  | Type
+  | Type | TVariant | TFieldDecl
   | Expr
   | Instruction
   | Param
+  | Case
+  | Pattern
   | Block
   | WhileLoop | ForLoop
   | Binding | FieldPathAssignement | FieldAssignment
+
+let string_of_node = function
+  | Name -> "name"
+  | Keyword -> "keyword"
+  | AttributeDeclaration -> "attrdecl"
+  | TypeDeclaration -> "typedecl"
+  | ConstDeclaration -> "constdecl"
+  | FunDeclaration -> "fundecl"
+  | VarDeclaration -> "vardecl"
+  | Par -> "par"
+  | Brace -> "brace"
+  | Bracket -> "bracket"
+  | Type -> "type"
+  | TVariant -> "tvariant"
+  | TFieldDecl -> "tfielddecl"
+  | Expr -> "expr"
+  | Instruction -> "instruction"
+  | Param -> "param"
+  | Case -> "case"
+  | Pattern -> "pattern"
+  | Block -> "block"
+  | WhileLoop -> "whileloop"
+  | ForLoop -> "forloop"
+  | Binding -> "binding"
+  | FieldPathAssignement -> "fieldpathassignement"
+  | FieldAssignment -> "fieldassignment"
+
+let node_of_string = function
+  | "name" -> Some Name
+  | "keyword" -> Some Keyword
+  | "attrdecl" -> Some AttributeDeclaration
+  | "typedecl" -> Some TypeDeclaration
+  | "constdecl" -> Some ConstDeclaration
+  | "fundecl" -> Some FunDeclaration
+  | "vardecl" -> Some VarDeclaration
+  | "par" -> Some Par
+  | "brace" -> Some Brace
+  | "bracket" -> Some Bracket
+  | "type" -> Some Type
+  | "tvariant" -> Some TVariant
+  | "tfielddecl" -> Some TFieldDecl
+  | "expr" -> Some Expr
+  | "instruction" -> Some Instruction
+  | "param" -> Some Param
+  | "case" -> Some Case
+  | "pattern" -> Some Pattern
+  | "block" -> Some Block
+  | "whileloop" -> Some WhileLoop
+  | "forloop" -> Some ForLoop
+  | "binding" -> Some Binding
+  | "fieldpathassignement" -> Some FieldPathAssignement
+  | "fieldassignment" -> Some FieldAssignment
+  | _ -> None
 
 type ast = node Ast.t
 
@@ -27,36 +80,38 @@ let rlex x = lex x.value x.region
 module K = struct
   let kwd x = node Keyword [Ast_lex x]
 
-  let kwd_end = kwd "end"
-  let kwd_type = kwd "type"
-  let kwd_is = kwd "id"
-  let kwd_const = kwd "const"
+  let kwd_end       = kwd "end"
+  let kwd_type      = kwd "type"
+  let kwd_is        = kwd "id"
+  let kwd_const     = kwd "const"
   let kwd_recursive = kwd "recursive"
-  let kwd_function = kwd "function"
-  let kwd_var = kwd "var"
-  let kwd_if = kwd "if"
-  let kwd_then = kwd "then"
-  let kwd_else = kwd "else"
-  let kwd_skip = kwd "skip"
-  let kwd_begin = kwd "begin"
-  let kwd_and = kwd "and"
-  let kwd_or = kwd "or"
-  let kwd_not = kwd "not"
-  let kwd_mod = kwd "mod"
-  let kwd_while = kwd "while"
-  let kwd_for = kwd "for"
-  let kwd_to = kwd "to"
-  let kwd_step = kwd "step"
-  let kwd_in = kwd "in"
-  let kwd_set     = kwd "set"
-  let kwd_map     = kwd "map"
-  let kwd_list    = kwd "list"
-  let kwd_with = kwd "with"
-  let kwd_nil = kwd "nil"
-  let kwd_contains = kwd "contains"
-  let kwd_patch = kwd "patch"
-  let kwd_from = kwd "from"
-  let kwd_remove = kwd "remove"
+  let kwd_function  = kwd "function"
+  let kwd_var       = kwd "var"
+  let kwd_if        = kwd "if"
+  let kwd_then      = kwd "then"
+  let kwd_else      = kwd "else"
+  let kwd_skip      = kwd "skip"
+  let kwd_begin     = kwd "begin"
+  let kwd_and       = kwd "and"
+  let kwd_or        = kwd "or"
+  let kwd_not       = kwd "not"
+  let kwd_mod       = kwd "mod"
+  let kwd_while     = kwd "while"
+  let kwd_for       = kwd "for"
+  let kwd_to        = kwd "to"
+  let kwd_step      = kwd "step"
+  let kwd_in        = kwd "in"
+  let kwd_set       = kwd "set"
+  let kwd_map       = kwd "map"
+  let kwd_list      = kwd "list"
+  let kwd_with      = kwd "with"
+  let kwd_nil       = kwd "nil"
+  let kwd_contains  = kwd "contains"
+  let kwd_patch     = kwd "patch"
+  let kwd_from      = kwd "from"
+  let kwd_remove    = kwd "remove"
+  let kwd_of        = kwd "of"
+  let kwd_case      = kwd "case"
 
   let block = kwd "block"
 
@@ -90,19 +145,19 @@ module K = struct
   let wild     = kwd "_"
   let cat      = kwd "^"
 
-  let dquote = kwd "\""
+  let dquote  = kwd "\""
   let lverbat = kwd "{|"
   let rverbat = kwd "|}"
 
-  let c_Unit = kwd "Unit"
-  let c_True = kwd "True"
+  let c_Unit  = kwd "Unit"
+  let c_True  = kwd "True"
   let c_False = kwd "False"
-  let c_Some = kwd "Some"
-  let c_None = kwd "None"
+  let c_Some  = kwd "Some"
+  let c_None  = kwd "None"
 
-  let big_map = kwd "big_map"
+  let big_map    = kwd "big_map"
   let attributes = kwd "attributes"
-  let record = kwd "record"
+  let record     = kwd "record"
 end
 
 let print_par f x =
@@ -150,20 +205,47 @@ let print_ne_injection : 'a. ('a -> ast) -> ('a ne_injection) -> ast list =
 let print_attr_decl xs =
   node AttributeDeclaration (print_ne_injection rlex xs.value) xs.region
 
+(* Type *)
 let rec print_type_expr reg x =
   let xs = match x with
-    | TProd   _ -> assert false
-    | TSum   _ -> assert false
-    | TRecord _ -> assert false
-    | TApp   _ -> assert false
-    | TFun    x ->
-       let (l,arrow,r) = x.value in
-       [print_type_expr x.region l; K.arrow arrow; print_type_expr x.region r]
+    | TProd   x -> print_tprod x
+    | TSum    x -> print_tsum x
+    | TRecord x -> print_trecord x
+    | TApp    x -> print_tapp x
+    | TFun    x -> print_tfun x
     | TPar    x -> [print_par (fun e -> [print_type_expr x.region e]) x]
     | TVar    x -> [rlex x] (* TODO *)
     | TWild   x -> [K.wild x]
     | TString x -> [rlex x] in
   node Type xs reg
+
+and print_tapp x =
+  let (constr,arg) = x.value in
+  [rlex constr; print_par (print_nsepseq K.comma (print_type_expr x.region) ) arg]
+
+and print_trecord x =
+  print_ne_injection print_field_decl x.value
+
+and print_field_decl x =
+  let {field_name; colon; field_type} = x.value in
+  let xs = [rlex field_name; K.colon colon; print_type_expr x.region field_type] in
+  node TFieldDecl xs x.region
+
+and print_tfun x =
+  let (l,arrow,r) = x.value in
+  [print_type_expr x.region l; K.arrow arrow; print_type_expr x.region r]
+
+and print_tsum x =
+  print_nsepseq K.vbar print_variant x.value
+
+and print_variant x =
+  let {constr;arg} = x.value in
+  let xs =
+    rlex constr :: opt_to_list (fun (kwd_of,t) -> [K.kwd_of kwd_of; print_type_expr x.region t]) arg in
+  node TVariant xs x.region
+
+and print_tprod x =
+  print_nsepseq K.times (print_type_expr x.region) x.value
 
 let print_type_opt reg x = opt_to_list (fun (c,t) -> [K.colon c; print_type_expr reg t]) x
 
@@ -174,15 +256,15 @@ let print_type_decl x =
       opt_to_list (fun x -> [K.semi x]) terminator in
   node TypeDeclaration xs x.region
 
+(* Expr *)
 let rec print_expr reg x =
   let xs = match x with
-      ECase    _ -> assert false
+      ECase    x -> print_case print_expr x
     | ECond    x -> print_cond_expr x
-    | EAnnot   x ->
-       [print_par (fun (e,c,t) -> [print_expr reg e; K.colon c; print_type_expr reg t]) x]
+    | EAnnot   x -> print_annot reg x
     | ELogic   x -> print_logic_expr x
     | EArith   x -> print_arith_expr x
-    | EString  x -> print_string x
+    | EString  x -> print_string_expr x
     | EList    x -> print_list_expr x
     | ESet     x -> print_set_expr x
     | EConstr  x -> print_constr x
@@ -200,6 +282,9 @@ let rec print_expr reg x =
     | ECodeInj x -> print_code_inj x
     | EBlock   x -> print_block_with x
   in node Expr xs reg
+
+and print_annot reg x =
+  [print_par (fun (e,c,t) -> [print_expr reg e; K.colon c; print_type_expr reg t]) x]
 
 and print_record x = print_ne_injection print_field_assigment x.value
 
@@ -270,7 +355,7 @@ and print_fun_call x =
   let (e,args) = x.value in
   [print_expr x.region e; print_expr x.region (ETuple args)]
 
-and print_string = function
+and print_string_expr = function
   | Cat e -> print_bin_op K.cat e
   | String e -> [K.dquote e.region; rlex e; K.dquote e.region]
   | Verbatim e -> [K.lverbat e.region; rlex e; K.rverbat e.region]
@@ -331,7 +416,7 @@ and print_arith_expr = function
 and print_instruction reg x =
   let xs = match x with
     | Cond       x -> print_conditional x
-    | CaseInstr  _ -> assert false
+    | CaseInstr  x -> print_case print_if_clause x
     | Assign     x -> print_assignement x
     | Loop       x -> [print_loop x]
     | ProcCall   x -> print_fun_call x
@@ -391,33 +476,6 @@ and print_assignement x =
   let {lhs;assign;rhs} = x.value in
   print_lhs lhs @ [K.assign assign; print_expr x.region rhs]
 
-and print_loop = function
-  | While x -> print_while_loop x
-  | For (ForInt x) -> print_for_int x
-  | For (ForCollect x) -> print_for_collect x
-
-and print_while_loop x =
-  let {kwd_while;cond;block} = x.value in
-  let xs = [K.kwd_while kwd_while; print_expr x.region cond; print_block block] in
-  node WhileLoop xs x.region
-
-and print_for_int x =
-  let {kwd_for; binder; assign; init; kwd_to; bound; step; block} = x.value in
-  let xs =
-    [K.kwd_for kwd_for; rlex binder; K.assign assign;
-     print_expr x.region init; K.kwd_to kwd_to; print_expr x.region bound]
-    @ opt_to_list (fun (s,e) -> [K.kwd_step s; print_expr x.region e]) step
-    @ [print_block block]
-  in node ForLoop xs x.region
-
-and print_for_collect x =
-  let {kwd_for; var; bind_to; kwd_in; collection; expr; block} = x.value in
-  let xs =
-    [K.kwd_for kwd_for; rlex var]
-    @ opt_to_list (fun (a,x) -> [K.arrow a; rlex x]) bind_to
-    @ [K.kwd_in kwd_in; print_collection collection; print_expr x.region expr; print_block block]
-  in node ForLoop xs x.region
-
 and print_conditional x =
   let {kwd_if; test; kwd_then; c_ifso; terminator; kwd_else; c_ifnot} = x.value in
   [K.kwd_if kwd_if; print_expr x.region test; K.kwd_then kwd_then; print_if_clause x.region c_ifso]
@@ -464,6 +522,80 @@ and print_clause_block = function
      print_block x
   | ShortBlock x ->
      print_braces (fun (s,t) -> print_statements x.region s @ print_terminator t) x
+
+(* Loops *)
+and print_loop = function
+  | While x -> print_while_loop x
+  | For (ForInt x) -> print_for_int x
+  | For (ForCollect x) -> print_for_collect x
+
+and print_while_loop x =
+  let {kwd_while;cond;block} = x.value in
+  let xs = [K.kwd_while kwd_while; print_expr x.region cond; print_block block] in
+  node WhileLoop xs x.region
+
+and print_for_int x =
+  let {kwd_for; binder; assign; init; kwd_to; bound; step; block} = x.value in
+  let xs =
+    [K.kwd_for kwd_for; rlex binder; K.assign assign;
+     print_expr x.region init; K.kwd_to kwd_to; print_expr x.region bound]
+    @ opt_to_list (fun (s,e) -> [K.kwd_step s; print_expr x.region e]) step
+    @ [print_block block]
+  in node ForLoop xs x.region
+
+and print_for_collect x =
+  let {kwd_for; var; bind_to; kwd_in; collection; expr; block} = x.value in
+  let xs =
+    [K.kwd_for kwd_for; rlex var]
+    @ opt_to_list (fun (a,x) -> [K.arrow a; rlex x]) bind_to
+    @ [K.kwd_in kwd_in; print_collection collection; print_expr x.region expr; print_block block]
+  in node ForLoop xs x.region
+
+(* Pattern *)
+and print_case : 'a. (Region.t -> 'a -> ast) -> 'a case reg -> ast list = fun f x ->
+  let {kwd_case; expr; kwd_of; enclosing; lead_vbar; cases} = x.value in
+  let (opening, closing) = print_enclosing enclosing in
+  [K.kwd_case kwd_case; print_expr x.region expr; K.kwd_of kwd_of]
+  @ opt_to_list (fun x -> [x]) opening
+  @ opt_to_list (fun x -> [K.vbar x]) lead_vbar
+  @ print_nsepseq K.vbar (print_case_clause f) cases.value
+  @ [closing]
+
+and print_case_clause : 'a. (Region.t -> 'a -> ast) -> 'a case_clause reg -> ast = fun f x ->
+  let {pattern; arrow; rhs} = x.value in
+  node Case [print_pattern x.region pattern; K.arrow arrow; f x.region rhs] x.region
+
+and print_pattern reg x =
+  let xs = match x with
+    | PConstr x -> print_constr_pattern x
+    | PVar    x -> [rlex x]
+    | PWild   x -> [K.wild x]
+    | PInt    x -> [print_int lex x]
+    | PNat    x -> [print_nat lex x]
+    | PBytes  x -> [print_bytes lex x]
+    | PString x -> [K.dquote x.region; rlex x; K.dquote x.region]
+    | PList   x -> print_pattern_list x
+    | PTuple  x -> [print_par (print_nsepseq K.comma (print_pattern x.region)) x]
+  in node Pattern xs reg
+
+and print_pattern_list = function
+  | PListComp x -> print_injection (print_pattern x.region) x
+  | PNil      x -> [K.kwd_nil x]
+  | PParCons  x -> [print_par (fun (y,c,ys) -> [print_pattern x.region y; K.cons c; print_pattern x.region ys]) x]
+  | PCons     x -> print_nsepseq K.cons (print_pattern x.region) x.value
+
+and print_constr_pattern = function
+  | PUnit      x -> [K.c_Unit x]
+  | PFalse     x -> [K.c_False x]
+  | PTrue      x -> [K.c_True x]
+  | PNone      x -> [K.c_None x]
+  | PSomeApp   x ->
+     let (s,arg) = x.value in
+     [K.c_Some s; print_par (fun p -> [print_pattern x.region p]) arg]
+  | PConstrApp x ->
+     let (constr,arg) = x.value in
+     rlex constr
+     :: opt_to_list (fun x -> [print_par (print_nsepseq K.comma (print_pattern x.region)) x]) arg
 
 and print_const_decl x =
   let {kwd_const; name; const_type; equal; init; terminator; attributes} = x.value in
