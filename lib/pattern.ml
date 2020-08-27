@@ -23,15 +23,17 @@ exception Failure
 
 module SMap = Map.Make(String)
 
-let add m k v =
+let print_if b x =
+  if b then print_endline x
+
+  let add ~debug eq_ast m k v =
   match SMap.find_opt k m with
   | None ->
      SMap.add k v m
   | Some w ->
-     if v = w then m else raise Failure
-
-let print_if b x =
-  if b then print_endline x
+     if eq_ast v w
+     then m
+     else (print_if debug "Fail during an add"; raise Failure)
 
 let mat ?(debug=false) eq_ast p f =
   let rec mat p f = match p,f with
@@ -43,17 +45,17 @@ let mat ?(debug=false) eq_ast p f =
        mat p f
     | Pat_var(x,None)::Pat_lex l1::p, (Ast_node _ as a1)::Ast_lex l2::f2 when l1 = l2 -> (* BIND1 *)
        print_if debug "BIND1";
-       add (mat p f2) x a1
+       add ~debug eq_ast (mat p f2) x a1
     | (Pat_var(x,Some c1)::Pat_lex l1::p, (Ast_node(_,c2,_) as a1)::Ast_lex(l2)::f2)
          when l1 = l2 && c1 = c2 -> (* BIND1 typed *)
        print_if debug "BIND1T";
-       add (mat p f2) x a1
+       add ~debug eq_ast (mat p f2) x a1
     | (Pat_var(x,None)::p, (Ast_node _ as a1) ::(Ast_node(_,_,_)::_ as f2)) -> (* BIND2 *)
        print_if debug "BIND2";
-       add (mat p f2) x a1
+       add ~debug eq_ast (mat p f2) x a1
     | (Pat_var(x,Some c)::p, (Ast_node(_,c1,_) as a1)::(Ast_node(_,_,_)::_ as f2)) when c = c1 -> (* BIND2 typed *)
        print_if debug "BIND1T";
-       add (mat p f2) x a1
+       add ~debug eq_ast (mat p f2) x a1
     | ([Pat_var(x,None)], [Ast_node _ as a1]) -> (* BIND3 *)
        print_if debug "BIND3";
        SMap.singleton x a1
@@ -63,7 +65,9 @@ let mat ?(debug=false) eq_ast p f =
     | (Pat_pat p1::p2, Ast_node(_,_,f1)::f2) -> (* UNPAR1 *)
        print_if debug "UNPAR1";
        SMap.union
-         (fun _ v1 v2 -> if eq_ast v1 v2 then Some v1 else raise Failure) (mat p1 f1) (mat p2 f2)
+         (fun _ v1 v2 ->
+           if eq_ast v1 v2 then Some v1 else (print_if debug "Fail during UNPAR1"; raise Failure))
+         (mat p1 f1) (mat p2 f2)
     | (p,Ast_node(_,_,f1)::f2) -> (* UNPAR2 *)
        print_if debug "UNPAR2";
        mat p (f1 @ f2)

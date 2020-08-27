@@ -13,7 +13,7 @@ module Make(U:Unparse.Unparser)= struct
     | Some x -> x
 
   (* Parse and run a pattern matching *)
-  let pattern ?(debug=true) {pat; pat_type; pat_message} ast =
+  let pattern ?(debug=false) {pat; pat_type; pat_message} ast =
     let unparsed_pattern =
       Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
     try
