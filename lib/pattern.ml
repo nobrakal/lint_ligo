@@ -76,6 +76,8 @@ let get_some xs =
   List.fold_left (fun acc x -> match acc with Some _ -> acc | None -> x) None xs
 
 let pat_match ?(debug=false) pat typ ast =
+  print_if debug
+    ("PAT: " ^ string_of_pattern pat);
   let is_mat ast =
     try ignore (mat ~debug eq_ast [pat] [ast]);
         match ast with
@@ -85,9 +87,10 @@ let pat_match ?(debug=false) pat typ ast =
   let lex _ = None in
   let node reg typ' xs thunk =
     if typ=typ'
-    then
-      match is_mat (Ast_node (reg,typ,xs)) with
-      | Some _ as x -> x
-      | None -> get_some (thunk ())
+    then begin
+        print_if debug ("AST: " ^ string_of_ast (Ast_node (reg,typ,xs)));
+        match is_mat (Ast_node (reg,typ,xs)) with
+        | Some _ as x -> x
+        | None -> get_some (thunk ()) end
     else get_some (thunk ()) in
   thunked_fold_ast lex node ast
