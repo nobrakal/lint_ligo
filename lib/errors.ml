@@ -18,4 +18,4 @@ let to_string = function
   | Ast_parsing t -> "Cannot parse the AST: " ^ t  ^ "."
   | Compiler c -> compiler_err c
   | Bad_language x -> "Unknown language: " ^ x ^ "."
-  | TypeMismatch -> "There is a type mismatch between the file and the languages of rules."
+  | TypeMismatch -> "There is a type mismatch between the file and the language of rules."
