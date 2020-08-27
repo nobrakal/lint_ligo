@@ -8,10 +8,11 @@ let thunked_fold_ast lex node x =
     | Ast_node (p,t,n) -> node p t n (fun () -> List.map aux n)
   in aux x
 
-let string_of_ast f x =
+let string_of_ast ?(print_type=fun _ -> "") x =
   let rec aux = function
     | Ast_lex x -> x
-    | Ast_node (_,t,xs) -> f t ^ "%(" ^ String.concat " " (List.map aux xs) ^ "%)"
+    | Ast_node (_,t,xs) ->
+       print_type t ^ "%(" ^ String.concat " " (List.map aux xs) ^ "%)"
   in aux x
 
 let eq_ast x y =

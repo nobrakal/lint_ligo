@@ -2,7 +2,7 @@ type 'a t =
   | Ast_lex of string
   | Ast_node of Simple_utils.Region.t * 'a * 'a t list
 
-val string_of_ast : ('a -> string) -> 'a t -> string
+val string_of_ast : ?print_type: ('a -> string) -> 'a t -> string
 
 val thunked_fold_ast :
   (string -> 'a) ->

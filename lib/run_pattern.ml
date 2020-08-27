@@ -23,7 +23,7 @@ module Make(U:Unparse.Unparser)= struct
       if debug then
         print_endline ("PAT: " ^ Pattern.string_of_pattern unparsed_pattern);
       if debug then
-        print_endline ("AST: " ^ Unparser.Ast.string_of_ast U.string_of_node ast);
+        print_endline ("AST: " ^ Unparser.Ast.string_of_ast ast);
       let pat_result = Pattern.pat_match ~debug unparsed_pattern typ ast in
       Ok (Option.map (fun x -> x,pat_message) pat_result)
     with
