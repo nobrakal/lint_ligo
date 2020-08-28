@@ -1,10 +1,10 @@
 # lint_ligo
 
-A linter for [LIGO](https://ligolang.org/).
+A linter for the [LIGO](https://ligolang.org/) language.
 
 ## Build
 
-lint_ligo uses [dune](https://github.com/ocaml/dune) as a build system.
+`lint_ligo` uses [dune](https://github.com/ocaml/dune) as a build system.
 To build the executable, just run `dune build bin/main.exe`.
 
 ## Usage
@@ -23,7 +23,7 @@ Note that currently, it will lint only CameLIGO and PascaLIGO files.
 
 ## Rules syntax
 
-A rules file contains a language and a list of rule. The file must follow the following syntax
+A rules file contains a language and a list of rule. The file must follow the following syntax:
 
 ```
 <rules> ::=
@@ -37,7 +37,7 @@ A rules file contains a language and a list of rule. The file must follow the fo
 
 <rule> ::=
   | pattern <type> %{ <pattern> %} message "<text>"
-  | deprectiate <string> in <string> opt(replacement <string>) opt(message <string>)
+  | depreciate <string> in <string> opt(replacement <string>) opt(message <string>)
 
 <type> ::= expr | type | keyword | (* under development *)
 
@@ -54,7 +54,14 @@ A rules file contains a language and a list of rule. The file must follow the fo
 You can mark a function name as depreciated. It must be followed by a version tag, and may be followed by a suggested replacement and/or a custom message.
 
 ### Patterns
-Given a pattern `P` of type `T` and a ast `A`, the linter will search a node `N` of `A` of type ̀`T` and a substitution `sigma` of the variables in `P` such that `sigma(P)` is equal to `N`. If it exists, it will display the given message.
+
+Patterns are a way to capture the shape of a piece of code. They are composed of:
+* Pattern variables (identifiers preceded by `%`). Note that a "hole" variable representing an always fresh variable is available using `%_`.
+To have a better control over variables, they can be typed to match only a kind of node in the AST.
+* Meta parentheses `%(` `%)` (parentheses not included in the targeted code but useful to indicate the shape of the AST).
+* Any words.
+
+More precisely, given a pattern `P` of type `T` and a ast `A`, the linter will search a node `N` of `A` of type  `T` and a substitution `sigma` of the variables in `P` such that `sigma(P)` is equal to `N`. If it exists, it will display the given message.
 
 The pattern matching algorithm is based on the [unparsed pattern][1]. This induces some unusual characteristics:
 
