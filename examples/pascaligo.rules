@@ -1,0 +1,5 @@
+language pascaligo
+
+pattern expr %{ list end %} message "`list end` is equivalent to `nil`."
+pattern expr %{ map end %} message "`map end` is equivalent to `Map.empty`."
+pattern expr %{ block { skip } with %_ %} message "`block {skip} with %x` is equivalent to `%x`."
