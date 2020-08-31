@@ -21,8 +21,8 @@ let defuse_union (x,a) (y,b) =
 let defuse_neutral =
   (M.empty,[])
 
-let defuse_unions =
-  List.fold_left defuse_union defuse_neutral
+let defuse_unions defuse =
+  List.fold_left defuse_union (defuse,[])
 
 let replace_opt k x m =
   Stdlib.Option.fold ~none:(M.remove k m) ~some:(fun x -> M.add k x m) x
@@ -62,7 +62,7 @@ let rec defuse_of_expr defuse expr : defuse * V.t list =
   | E_constructor {element;_} ->
      defuse_of_expr defuse element
   | E_constant {arguments;_} ->
-     defuse_unions (List.map (defuse_of_expr defuse) arguments)
+     defuse_unions defuse (List.map (defuse_of_expr defuse) arguments)
   | E_variable v ->
      M.add v true defuse,[]
   | E_application {lamb;args} ->
@@ -113,7 +113,7 @@ and defuse_of_poption defuse {match_none;match_some} =
     (remove_defined_var_after defuse opt defuse_of_expr body)
 
 and defuse_of_variant defuse {cases;_} =
-  defuse_unions @@
+  defuse_unions defuse @@
     List.map
       (fun {pattern;body;_} ->
         remove_defined_var_after defuse pattern defuse_of_expr body)
@@ -137,5 +137,5 @@ let make_warnings xs =
   let xs =
     List.sort (fun x y -> Location.(compare (get_location x) (get_location y))) xs in
   let aux v =
-    Location.get_location v, "Unused variable " ^ string_of_var (Location.unwrap v) in
+    Location.get_location v, "Unused variable " ^ string_of_var (Location.unwrap v) ^ "." in
   List.map aux xs
