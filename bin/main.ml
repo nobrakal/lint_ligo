@@ -14,8 +14,8 @@ let main_compiler rules =
   let ast = read_line () in
   main (Lint_ligo.Main.main_serialized ~ast) rules
 
-let main_file rules file entry_point =
-  main (Lint_ligo.Main.main_file ~file ~entry_point) rules
+let main_file rules file entrypoint =
+  main (Lint_ligo.Main.main_file ~file ~entrypoint) rules
 
 open Cmdliner
 
