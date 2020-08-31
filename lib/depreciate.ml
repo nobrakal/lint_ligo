@@ -34,8 +34,10 @@ let rec expression dep syntax defs x =
   let add_if_eq e =
     if Var.equal dep e then [x.location] else []  in
   match x.expression_content with
-  | E_literal _ | E_constructor _ ->
+  | E_literal _ ->
      []
+  | E_constructor {element;_} ->
+     expression' defs element
   | E_constant {cons_name; arguments} ->
      let xs = List.(concat (map (expression' defs) arguments)) in
      let x = add_if_eq (Var.of_name (cons_of_syntax syntax cons_name)) in
