@@ -15,8 +15,12 @@ let main run rules ast =
 let parse_rules buf =
   Rules.rules_of_parsed @@ Parser.rules Lexer.token buf
 
-let run {lang;deps;pats} = function
-  | Typed ast -> main (run_typed lang) deps ast
+let run ?(entrypoint="_") {lang;deps;pats} = function
+  | Typed program ->
+     let%bind typed_result = main (run_typed lang) deps program in
+     let unused =
+       Unused_variable.(make_warnings (unused_variables_of_program ~program ~entrypoint)) in
+     Ok (typed_result @ unused)
   | Cst cst ->
      match cst,lang with
      | Camel_cst  cst, Compile.Helpers.CameLIGO   ->
@@ -52,7 +56,7 @@ let parse_file file =
 let compile_to_typed entry_point imperative =
   let%bind sugar   = from_compiler_result @@ Compile.Of_imperative.compile imperative in
   let%bind core    = from_compiler_result @@ Compile.Of_sugar.compile sugar in
-  let%bind  typed,_ = from_compiler_result @@ Compile.Of_core.(compile (Contract entry_point) core) in
+  let%bind typed,_ = from_compiler_result @@ Compile.Of_core.(compile (Contract entry_point) core) in
   Ok typed
 
 let string_of_result (loc,x) =
@@ -67,10 +71,10 @@ let prepare_result_file =
   list_map_to_opt @@
     fun result ->  String.concat "\n" (List.map string_of_result result)
 
-let main_file ~rules ~file ~entry_point =
+let main_file ~rules ~file ~entrypoint =
   let%bind rules   = parse_rules rules in
   let%bind (imperative,cst) = parse_file file in
-  let%bind ast = compile_to_typed entry_point imperative in
-  let%bind result_cst = run rules (Cst cst) in
-  let%bind result_ast = run rules (Typed ast) in
+  let%bind ast = compile_to_typed entrypoint imperative in
+  let%bind result_cst = run ~entrypoint rules (Cst cst) in
+  let%bind result_ast = run ~entrypoint rules (Typed ast) in
   Ok (prepare_result_file (result_cst @ result_ast))
