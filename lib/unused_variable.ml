@@ -12,8 +12,8 @@ end
 module S = Set.Make(V)
 module M = Map.Make(V)
 
-(* Record if a variable is being used *)
-type defuse = bool M.t
+(* A map recording if a variable is being used * a list of unused variables *)
+type defuse = bool M.t * V.t list
 
 let defuse_union (x,a) (y,b) =
   M.union (fun _ x y -> Some (x||y)) x y, a@b
@@ -55,7 +55,7 @@ let add_if_unused unused binder defuse =
   | Some (k,b) -> add_if_not_generated k unused b
 
 (* Return a def-use graph + a list of unused variables *)
-let rec defuse_of_expr defuse expr : defuse * V.t list =
+let rec defuse_of_expr defuse expr : defuse =
   match expr.expression_content with
   | E_literal _ ->
      defuse,[]
@@ -119,7 +119,7 @@ and defuse_of_variant defuse {cases;_} =
         remove_defined_var_after defuse pattern defuse_of_expr body)
       cases
 
-let defuse_of_program : program -> defuse * V.t list = fun xs ->
+let defuse_of_program : program -> defuse = fun xs ->
   let aux ((defuse, unused') as acc) x =
     match Location.unwrap x with
     | Declaration_constant {binder;expr;_} ->
