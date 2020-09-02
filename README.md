@@ -9,12 +9,10 @@ To build the executable, just run `dune build bin/main.exe`.
 
 ## Usage
 
-### As a standalone executable
-
 The command
 
 ```
-lint_ligo lint file.rules file.mligo entrypoint
+lint_ligo file.rules file.mligo entrypoint
 ```
 
 will lint `file.mligo` (with entry point `entrypoint`) using the rules in `file.rules`.
