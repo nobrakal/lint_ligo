@@ -314,7 +314,7 @@ and print_list_expr = function
   | ENil x -> [K.kwd_nil x]
 
 and print_cond_expr x =
-  let {kwd_if; test; kwd_then; ifso; terminator; kwd_else; ifnot} = x.value in
+  let {kwd_if; test; kwd_then; ifso; terminator; kwd_else; ifnot} : cond_expr = x.value in
   [K.kwd_if kwd_if; print_expr x.region test; K.kwd_then kwd_then; print_expr x.region ifso]
   @ print_terminator terminator
   @ [K.kwd_else kwd_else; print_expr x.region ifnot]
@@ -464,13 +464,13 @@ and print_projection x =
 
 and print_path = function
   | Pascaligo.CST.Name x -> [rlex x]
-  | Path_proj xs -> print_projection xs
+  | Path xs -> print_projection xs
 
 and print_map_lookup x =
   let {path; index} = x.value in
   print_path path @ [print_bracket (fun e -> [print_expr x.region e]) index]
 
-and print_lhs = function
+and print_lhs : lhs -> ast list = function
   | Path x -> print_path x
   | MapPath x -> print_map_lookup x
 
@@ -479,10 +479,10 @@ and print_assignement x =
   print_lhs lhs @ [K.assign assign; print_expr x.region rhs]
 
 and print_conditional x =
-  let {kwd_if; test; kwd_then; c_ifso; terminator; kwd_else; c_ifnot} = x.value in
-  [K.kwd_if kwd_if; print_expr x.region test; K.kwd_then kwd_then; print_if_clause x.region c_ifso]
+  let {kwd_if; test; kwd_then; ifso; terminator; kwd_else; ifnot} : conditional = x.value in
+  [K.kwd_if kwd_if; print_expr x.region test; K.kwd_then kwd_then; print_if_clause x.region ifso]
   @ print_terminator terminator
-  @ [K.kwd_else kwd_else; print_if_clause x.region c_ifnot]
+  @ [K.kwd_else kwd_else; print_if_clause x.region ifnot]
 
 and print_if_clause reg = function
   | ClauseInstr inst -> print_instruction reg inst

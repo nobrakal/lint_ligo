@@ -15,7 +15,7 @@ module Make(U:Unparse.Unparser)= struct
   (* Parse and run a pattern matching *)
   let pattern ?(debug=false) {pat; pat_type; pat_message} ast =
     let unparsed_pattern =
-      Parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
+      Lint_parser.unparsed_pattern Lexer_unparsed.token (Lexing.from_string pat) in
     try
       let unparsed_pattern =
         Pattern.map_type_pattern string_of_node' unparsed_pattern in

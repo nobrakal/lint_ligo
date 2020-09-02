@@ -1,6 +1,6 @@
 { (* -*- tuareg -*- *)
 
-  open Parser
+  open Lint_parser
 
   let pat_buff = Buffer.create 2048
 

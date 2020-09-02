@@ -26,4 +26,13 @@ type rules =
     pats : annoted_pattern list
   }
 
+type cst =
+  | Camel_cst of Cameligo.CST.t
+  | Pascal_cst of Pascaligo.CST.t
+  | Reason_cst of Reasonligo.CST.t
+
+type stage =
+  | Typed of Ast_typed.program
+  | Cst of cst
+
 val rules_of_parsed : parsed_rules -> (rules, Errors.t) result

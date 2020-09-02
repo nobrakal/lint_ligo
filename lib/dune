@@ -1,8 +1,8 @@
 (ocamllex lexer lexer_unparsed)
-(menhir (modules parser) (flags --explain))
+(menhir (modules lint_parser) (flags --explain))
 
 (library
  (name lint_ligo)
- (libraries yojson ligo.ast_typed ligo.compile ligo.decompile unparser)
+ (libraries yojson ligo.ast_typed ligo.compile ligo.decompile unparser ligo.parser)
  (preprocess (pps ppx_let))
 )

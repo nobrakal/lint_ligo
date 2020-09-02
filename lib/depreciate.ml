@@ -15,7 +15,7 @@ open Ast_typed
 module H = Compile.Helpers
 
 module V = struct
-  type t = virtual_location Var.t
+  type t = expression_ Var.t
 
   let compare = Simple_utils.Var.compare
 end

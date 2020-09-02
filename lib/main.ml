@@ -1,8 +1,6 @@
 open Rules
 open Utils
 
-open Compile.Linter
-
 module Pat_cameligo  = Run_pattern.Make(Unparser.Unparser_cameligo)
 module Pat_pascaligo = Run_pattern.Make(Unparser.Unparser_pascaligo)
 
@@ -13,7 +11,7 @@ let main run rules ast =
   Result.map List.concat @@ sequence_result @@ List.map (run ast) rules
 
 let parse_rules buf =
-  Rules.rules_of_parsed @@ Parser.rules Lexer.token buf
+  Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
 
 let run ?(entrypoint="_") {lang;deps;pats} = function
   | Typed program ->
@@ -32,26 +30,37 @@ let run ?(entrypoint="_") {lang;deps;pats} = function
      | _ ->
         Error Errors.TypeMismatch
 
-let serialize result =
-  Yojson.Safe.to_string @@ linter_result_to_yojson result
-
-let main_serialized ~rules ~ast =
-  match ast_of_yojson (Yojson.Safe.from_string ast) with
-  | Error e ->
-     Error (Errors.Ast_parsing e)
-  | Ok ast ->
-     let%bind rules = parse_rules rules in
-     let%bind result = run rules ast in
-     Ok (list_map_to_opt serialize result)
-
 let from_compiler_result x = match x with
   | Ok (x,_) -> Ok x
   | Error e  -> Error (Errors.Compiler e)
 
-let parse_file file =
-  let%bind syntax =
-    from_compiler_result @@ Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
-  from_compiler_result @@ Compile.Helpers.(parse_and_abstract syntax file)
+let parse_file syntax file =
+  let open Compile.Helpers in
+  match syntax with
+  | CameLIGO ->
+     let%bind raw = from_compiler_result @@
+       Simple_utils.Trace.trace Main_errors.parser_tracer @@
+         Parser.Cameligo.parse_file file in
+     let%bind imperative = from_compiler_result @@
+       Simple_utils.Trace.trace Main_errors.cit_cameligo_tracer @@
+         Tree_abstraction.Cameligo.compile_program raw in
+     Ok (imperative, Camel_cst raw)
+  | PascaLIGO ->
+     let%bind raw = from_compiler_result @@
+       Simple_utils.Trace.trace Main_errors.parser_tracer @@
+         Parser.Pascaligo.parse_file file in
+     let%bind imperative = from_compiler_result @@
+       Simple_utils.Trace.trace Main_errors.cit_pascaligo_tracer @@
+         Tree_abstraction.Pascaligo.compile_program raw in
+     Ok (imperative, Pascal_cst raw)
+  | ReasonLIGO ->
+     let%bind raw = from_compiler_result @@
+       Simple_utils.Trace.trace Main_errors.parser_tracer @@
+         Parser.Reasonligo.parse_file file in
+     let%bind imperative = from_compiler_result @@
+       Simple_utils.Trace.trace Main_errors.cit_reasonligo_tracer @@
+         Tree_abstraction.Reasonligo.compile_program raw in
+     Ok (imperative, Reason_cst raw)
 
 let compile_to_typed entry_point imperative =
   let%bind sugar   = from_compiler_result @@ Compile.Of_imperative.compile imperative in
@@ -72,8 +81,10 @@ let prepare_result_file =
     fun result ->  String.concat "\n" (List.map string_of_result result)
 
 let main_file ~rules ~file ~entrypoint =
+  let%bind syntax =
+    from_compiler_result @@ Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
   let%bind rules   = parse_rules rules in
-  let%bind (imperative,cst) = parse_file file in
+  let%bind (imperative,cst) = parse_file syntax file in
   let%bind ast = compile_to_typed entrypoint imperative in
   let%bind result_cst = run ~entrypoint rules (Cst cst) in
   let%bind result_ast = run ~entrypoint rules (Typed ast) in

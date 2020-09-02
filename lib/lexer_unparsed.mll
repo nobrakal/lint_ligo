@@ -1,6 +1,6 @@
 { (* -*- tuareg -*- *)
 
-  open Parser
+  open Lint_parser
 
 }
 

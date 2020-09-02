@@ -1,7 +1,7 @@
 open Simple_utils
 
 val unused_variables_of_program :
-  program:Ast_typed.program -> entrypoint:string -> string Var.t Location.wrap list
+  program:Ast_typed.program -> entrypoint:string -> Ast_typed.expression_variable list
 
 val make_warnings :
-  string Var.t Location.wrap list -> (Location.t * string) list
+  Ast_typed.expression_variable list -> (Location.t * string) list

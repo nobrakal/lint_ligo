@@ -4,7 +4,7 @@ open Ast_typed
 
 module V = struct
 
-  type t = string Var.t Location.wrap
+  type t = expression_variable
 
   let compare x y = compare (Location.unwrap x) (Location.unwrap y)
 end
@@ -129,7 +129,7 @@ let defuse_of_program : program -> defuse = fun xs ->
     | _ -> acc (* TODO unused types ? *)
   in List.fold_left aux defuse_neutral xs
 
-let unused_variables_of_program ~program ~entrypoint : string Var.t Location.wrap list =
+let unused_variables_of_program ~program ~entrypoint : expression_variable list =
   let defuse,unused = defuse_of_program program in
   M.fold (fun v b acc -> add_if_not_generated ~forbidden:entrypoint v acc b) defuse unused
 
