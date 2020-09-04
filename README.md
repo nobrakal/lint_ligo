@@ -40,12 +40,12 @@ A rules file contains a language and a list of rule. The file must follow the fo
 <type> ::= expr | type | keyword | (* under development *)
 
 <pattern> ::=
-  | %<identifier> (* A named variable *)
+  | %<identifier>        (* A named variable *)
   | %<identifier>:<type> (* A named variable with a type *)
-  | %_ (* A fresh variable *)
-  | %_:<type> (* A fresh typed variable *)
-  | %( <pattern> %) (* a pattern in a sub-tree *)
-  | <word> (* Any word *)
+  | %_                   (* A fresh variable *)
+  | %_:<type>            (* A fresh typed variable *)
+  | %( <pattern> %)      (* a pattern in a sub-tree *)
+  | <word>               (* Any word *)
 ```
 ### Depreciation
 
@@ -54,6 +54,7 @@ You can mark a function name as depreciated. It must be followed by a version ta
 ### Patterns
 
 Patterns are a way to capture the shape of a piece of code. They are composed of:
+
 * Pattern variables (identifiers preceded by `%`). Note that a "hole" variable representing an always fresh variable is available using `%_`.
 To have a better control over variables, they can be typed to match only a kind of node in the AST.
 * Meta parentheses `%(` `%)` (parentheses not included in the targeted code but useful to indicate the shape of the AST).
@@ -66,6 +67,5 @@ The pattern matching algorithm is based on the [unparsed pattern][1]. This induc
 * Patterns are _not_ parsed, thus they can correspond to invalid LIGO code, and no warning will be issued. Such patterns will simply not match anything.
 * Patterns are not linear, meaning that a variable can appear more than once in a pattern.
 * Variables can be typed. A typed variable will only match a node of the given type.
-* For now, patterns must be written to target the CamelLIGO syntax.
 
 [1]: Rinderknecht, Christian & Volanschi, Nic. (2010). Theory and practice of unparsed patterns for metacompilation. Science of Computer Programming. 75. 85-105.
