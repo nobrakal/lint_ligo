@@ -4,8 +4,8 @@ open Utils
 module Pat_cameligo  = Run_pattern.Make(Unparser.Unparser_cameligo)
 module Pat_pascaligo = Run_pattern.Make(Unparser.Unparser_pascaligo)
 
-let run_typed lang ast dep =
-  Ok (Depreciate.run dep lang ast)
+let run_typed ast dep =
+  Ok (Depreciate_custom.run dep ast)
 
 let main run rules ast =
   Result.map List.concat @@ sequence_result @@ List.map (run ast) rules
@@ -15,7 +15,7 @@ let parse_rules buf =
 
 let run ?(entrypoint="_") {lang;deps;pats} = function
   | Typed program ->
-     let%bind typed_result = main (run_typed lang) deps program in
+     let%bind typed_result = main run_typed deps program in
      let unused =
        Unused_variable.(make_warnings (unused_variables_of_program ~program ~entrypoint)) in
      Ok (typed_result @ unused)

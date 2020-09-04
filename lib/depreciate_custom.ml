@@ -22,15 +22,10 @@ end
 
 module S = Set.Make(V)
 
-let cons_of_syntax = function
-  | H.CameLIGO -> Predefined.Tree_abstraction.Cameligo.constant_to_string
-  | H.PascaLIGO -> Predefined.Tree_abstraction.Pascaligo.constant_to_string
-  | H.ReasonLIGO -> Predefined.Tree_abstraction.Reasonligo.constant_to_string
-
 let adds xs acc = List.fold_left (fun acc x -> S.add x acc) acc xs
 
-let rec expression dep syntax defs x =
-  let expression' defs x = expression dep syntax defs x in
+let rec expression dep defs x =
+  let expression' defs x = expression dep defs x in
   let add_if_eq e =
     if Var.equal dep e then [x.location] else []  in
   match x.expression_content with
@@ -38,10 +33,8 @@ let rec expression dep syntax defs x =
      []
   | E_constructor {element;_} ->
      expression' defs element
-  | E_constant {cons_name; arguments} ->
-     let xs = List.(concat (map (expression' defs) arguments)) in
-     let x = add_if_eq (Var.of_name (cons_of_syntax syntax cons_name)) in
-     x@xs
+  | E_constant {arguments;_} ->
+     List.(concat (map (expression' defs) arguments))
   | E_variable v ->
      add_if_eq (unwrap v)
   | E_application {lamb;args} ->
@@ -54,10 +47,8 @@ let rec expression dep syntax defs x =
      let rhs = expression' defs rhs in
      let let_result = expression' (S.add (unwrap let_binder) defs) let_result in
      rhs @ let_result
-  | E_raw_code {language;code} ->
-     begin match Compile.Helpers.syntax_to_variant (H.Syntax_name language) None with
-     | Error _e -> failwith "TODO"
-     | Ok (syntax',_) -> expression dep syntax' defs code end
+  | E_raw_code {code;_} ->
+     expression dep defs code
   | E_matching {matchee;cases} ->
      let xs = expression' defs matchee in
      xs @ matching_cases expression' defs cases
@@ -78,17 +69,17 @@ and matching_cases expression' defs = function
   | Match_variant {cases;_} ->
      List.(concat (map (fun {pattern;body;_} -> expression' (S.add (unwrap pattern) defs) body) cases))
 
-let get_depreciated (dep : V.t) syntax program =
+let get_depreciated (dep : V.t) program =
   let aux ((defs,xs) as acc) (x : declaration_loc) =
     match unwrap x with
     | Declaration_constant {binder;expr;_} ->
        let defs' = S.add (unwrap binder) defs in
-       let xs = xs@expression dep syntax defs expr in
+       let xs = xs@expression dep defs expr in
        defs',xs
     | _ -> acc
   in
   snd (List.fold_left aux (S.empty,[]) program)
 
-let run dep syntax program =
-  let xs = get_depreciated (Var.of_name dep.Rules.dep) syntax program in
+let run dep program =
+  let xs = get_depreciated (Var.of_name dep.Rules.dep) program in
   List.map (fun x -> x,make_dep_msg dep) xs
