@@ -7,6 +7,42 @@ A linter for the [LIGO](https://ligolang.org/) language.
 `lint_ligo` uses [dune](https://github.com/ocaml/dune) as a build system.
 To build the executable, just run `dune build bin/main.exe`.
 
+## Features
+
+The linter is fully configurable and will:
+
+* Detect unused variables
+* Detect the use of deprecated functions, and allow the user to add their proper deprecations
+* Pattern-match the code against user-defined patterns to detect the use of bad programming patterns.
+
+### Examples
+
+With the following configuration
+
+```
+language cameligo
+pattern expr %{ if %_ then %x else %x %} message "Useless test."
+```
+
+and the cameligo file:
+
+```
+let f (x:int) (b:bool) =
+  if true then x else x
+
+let main (action, store : int * int) =
+ ([] : operation list), f store false
+```
+
+The linter will print:
+
+```
+in file "taco-shop.mligo", line 1, characters 14-22:
+Unused variable b.
+in file "taco-shop.mligo", line 2, characters 2-23:
+Useless test.
+```
+
 ## Usage
 
 The command
