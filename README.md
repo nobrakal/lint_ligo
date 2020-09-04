@@ -11,11 +11,11 @@ To build the executable, just run `dune build bin/main.exe`.
 
 The linter is fully configurable and will:
 
-* Detect unused variables
-* Detect the use of deprecated functions, and allow the user to add their proper deprecations
+* Detect unused variables.
+* Detect the use of deprecated functions, and allow the user to add their proper deprecations.
 * Pattern-match the code against user-defined patterns to detect the use of bad programming patterns.
 
-### Examples
+### Example
 
 With the following configuration
 
