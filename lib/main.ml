@@ -76,9 +76,11 @@ let string_of_result (loc,x) =
   Buffer.add_string buff (":\n" ^ x);
   Buffer.contents buff
 
-let prepare_result_file =
+let prepare_result =
   list_map_to_opt @@
-    fun result ->  String.concat "\n" (List.map string_of_result result)
+    fun result ->
+    let result = List.sort (fun (x,_) (y,_) -> Simple_utils.Location.compare x y) result in
+    String.concat "\n" (List.map string_of_result result)
 
 let main ~rules ~file ~entrypoint =
   let%bind syntax =
@@ -88,4 +90,4 @@ let main ~rules ~file ~entrypoint =
   let%bind ast = compile_to_typed entrypoint imperative in
   let%bind result_cst = run ~entrypoint rules (Cst cst) in
   let%bind result_ast = run ~entrypoint rules (Typed ast) in
-  Ok (prepare_result_file (result_cst @ result_ast))
+  Ok (prepare_result (result_cst @ result_ast))

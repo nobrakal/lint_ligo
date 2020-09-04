@@ -220,7 +220,7 @@ and print_binders loc xs = List.map (print_pattern loc) (Utils.nseq_to_list xs)
 and print_let_binding loc {binders;lhs_type;let_rhs;eq} =
   print_binders loc binders
   @ (opt_to_list (fun (c,l) -> [K.colon c; print_type_expr loc l]) lhs_type)
-  @ [K.equal eq; print_expr loc let_rhs]
+  @ [K.equal eq; print_expr (expr_to_region let_rhs) let_rhs]
 
 and print_expr loc x =
   let ast_x : ast list =
