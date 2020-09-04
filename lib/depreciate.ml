@@ -73,4 +73,5 @@ let dep_decl acc x =
   | Declaration_constant (_,_,_,x) -> dep_expr acc x
 
 let program xs =
-  List.fold_left dep_decl [] xs
+  let xs = List.fold_left dep_decl [] xs in
+  List.map (fun (x,n) -> x, "Deprecated function " ^ n) xs
