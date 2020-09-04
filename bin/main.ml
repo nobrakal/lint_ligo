@@ -1,6 +1,6 @@
-let main f rules =
+let main rules file entrypoint =
   let rules = Lexing.from_channel (open_in rules) in
-  match f ~rules with
+  match Lint_ligo.Main.main ~rules ~file ~entrypoint with
   | Ok None ->
      0
   | Ok (Some result) ->
@@ -9,9 +9,6 @@ let main f rules =
   | Error e ->
      print_endline (Lint_ligo.Errors.to_string e);
      2
-
-let main_file rules file entrypoint =
-  main (Lint_ligo.Main.main_file ~file ~entrypoint) rules
 
 open Cmdliner
 
@@ -31,7 +28,7 @@ let lint =
   let info =
     let doc = "Subcommand: lint a file with the given rules." in
     Term.info ~doc "lint_ligo" in
-  let t = Term.(const main_file $ rules $ file $ entry_point) in
+  let t = Term.(const main $ rules $ file $ entry_point) in
   t,info
 
 let () =

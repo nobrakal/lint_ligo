@@ -80,7 +80,7 @@ let prepare_result_file =
   list_map_to_opt @@
     fun result ->  String.concat "\n" (List.map string_of_result result)
 
-let main_file ~rules ~file ~entrypoint =
+let main ~rules ~file ~entrypoint =
   let%bind syntax =
     from_compiler_result @@ Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
   let%bind rules   = parse_rules rules in
