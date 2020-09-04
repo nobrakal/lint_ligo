@@ -34,7 +34,7 @@ let main (action, store : int * int) =
  ([] : operation list), f store false
 ```
 
-The linter will print:
+the linter will print:
 
 ```
 in file "taco-shop.mligo", line 1, characters 14-22:
