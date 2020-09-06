@@ -1,8 +1,9 @@
 open Rules
 open Utils
 
-module Pat_cameligo  = Run_pattern.Make(Unparser.Unparser_cameligo)
-module Pat_pascaligo = Run_pattern.Make(Unparser.Unparser_pascaligo)
+module Pat_cameligo   = Run_pattern.Make(Unparser.Unparser_cameligo)
+module Pat_pascaligo  = Run_pattern.Make(Unparser.Unparser_pascaligo)
+module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
 
 let run_typed lang ast dep =
   Ok (Depreciate.run dep lang ast)
@@ -25,8 +26,8 @@ let run ?(entrypoint="_") {lang;deps;pats} = function
         main Pat_cameligo.run_cst  pats cst
      | Pascal_cst cst, Compile.Helpers.PascaLIGO  ->
         main Pat_pascaligo.run_cst pats cst
-     | Reason_cst _  , Compile.Helpers.ReasonLIGO ->
-        failwith "ReasonLIGO"
+     | Reason_cst cst, Compile.Helpers.ReasonLIGO ->
+        main Pat_reasonligo.run_cst pats cst
      | _ ->
         Error Errors.TypeMismatch
 

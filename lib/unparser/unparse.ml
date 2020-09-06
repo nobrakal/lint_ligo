@@ -8,5 +8,6 @@ module type Unparser  = sig
   val unparse_cst : cst -> node Ast.t list
 end
 
-module Cameligo  : Unparser with type cst = Cameligo.CST.t = Unparser_cameligo
-module Pascaligo : Unparser with type cst = Pascaligo.CST.t = Unparser_pascaligo
+module Cameligo   : Unparser with type cst = Cameligo.CST.t   = Unparser_cameligo
+module Pascaligo  : Unparser with type cst = Pascaligo.CST.t  = Unparser_pascaligo
+module Reasonligo : Unparser with type cst = Reasonligo.CST.t = Unparser_reasonligo
