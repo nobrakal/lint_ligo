@@ -53,8 +53,6 @@ lint_ligo file.rules file.mligo entrypoint
 
 will lint `file.mligo` (with entry point `entrypoint`) using the rules in `file.rules`.
 
-Note that currently, it will lint only CameLIGO and PascaLIGO files.
-
 ## Rules syntax
 
 A rules file contains a language and a list of rule. The file must follow the following syntax:
