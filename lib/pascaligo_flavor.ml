@@ -18,13 +18,23 @@ exception WrongFlavor of wrong_flavor
 
 let flavor_terminator reg flavor option =
   match flavor,option with
-  | None,None -> Some Terse
-  | None,Some _ -> Some Verbose
-  | Some Terse,None | Some Verbose, Some _ -> flavor
-  | Some Verbose, None ->
-     raise (WrongFlavor {actual=Verbose; expected="semicolon"; got="nothing"; reg})
-  | Some Terse, Some reg ->
-     raise (WrongFlavor {actual=Terse; expected="nothing"; got="semicolon"; reg})
+  | None,None -> Some Verbose
+  | None,Some _ -> Some Terse
+  | Some Terse, Some _ | Some Verbose, None -> flavor
+  | Some Terse, None ->
+     raise (WrongFlavor {actual=Terse; expected="semicolon"; got="nothing"; reg})
+  | Some Verbose, Some reg ->
+     raise (WrongFlavor {actual=Verbose; expected="nothing"; got="semicolon"; reg})
+
+let favor_lead reg flavor option =
+  match flavor,option with
+  | None,None -> Some Verbose
+  | None,Some _ -> Some Terse
+  | Some Terse, Some _ | Some Verbose, None -> flavor
+  | Some Terse, None ->
+     raise (WrongFlavor {actual=Terse; expected="vertical bar"; got="nothing"; reg})
+  | Some Verbose, Some reg ->
+     raise (WrongFlavor {actual=Verbose; expected="nothing"; got="vertical bar"; reg})
 
 let flavor_block_enclosing flavor enclos =
   match flavor,enclos with
@@ -90,7 +100,7 @@ let rec check_expr (flavor : flavor option) = function
   | EVar _ | EUnit _ | EString _ | EBytes _ | EProj _ ->
      flavor
   | ECase    x ->
-     check_case_expr check_expr flavor x.value
+     check_case_expr x.region check_expr flavor x.value
   | ECond    x ->
      check_cond_expr flavor x.value
   | EAnnot   x ->
@@ -133,10 +143,11 @@ and check_record region flavor x =
     (fun flavor (x:field_assignment reg) -> check_expr flavor x.value.field_expr) x
 
 and check_case_expr :
-      'a. (flavor option -> 'a -> flavor option) -> flavor option -> ('a case) -> flavor option =
-  fun f flavor {expr; enclosing; cases; _} -> (* TODO LEADVBAR *)
+      'a. region -> (flavor option -> 'a -> flavor option) -> flavor option -> ('a case) -> flavor option =
+  fun region f flavor {expr; enclosing; cases; lead_vbar; _} -> (* TODO LEADVBAR *)
   let flavor = check_expr flavor expr in
   let flavor = flavor_enclosing flavor enclosing in
+  let flavor = favor_lead region flavor lead_vbar in
   List.fold_left (check_case_clause f) flavor (Utils.nsepseq_to_list cases.value)
 
 and check_case_clause :
@@ -247,7 +258,7 @@ and check_instr flavor = function
   | Cond        x ->
      check_conditional flavor x.value
   | CaseInstr   x ->
-     check_case_expr check_if_clause flavor x.value
+     check_case_expr x.region check_if_clause flavor x.value
   | Assign      x ->
      check_assignment flavor x.value
   | Loop        x ->
@@ -441,10 +452,10 @@ let verify_program ?flavor p =
   | None -> []
   | Some {actual;expected;got;reg} ->
      let str =
-       "Wrong PascalLigo flavor. With "
+       "Mixed PascalLigo flavors. With inferred "
        ^ string_of_flavor actual
-       ^ "flavor, expected "
+       ^ " flavor, expected "
        ^ expected
-       ^ "but got "
-       ^ got in
+       ^ " but got "
+       ^ got ^ "." in
      [Simple_utils.Location.File reg,str]
