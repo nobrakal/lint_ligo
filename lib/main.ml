@@ -25,7 +25,9 @@ let run ?(entrypoint="_") {lang;deps;pats} = function
      | Camel_cst  cst, Compile.Helpers.CameLIGO   ->
         main Pat_cameligo.run_cst  pats cst
      | Pascal_cst cst, Compile.Helpers.PascaLIGO  ->
-        main Pat_pascaligo.run_cst pats cst
+        let%bind pats = main Pat_pascaligo.run_cst pats cst in
+        let    flavor = Pascaligo_flavor.verify_program cst in
+        Ok (pats @ flavor)
      | Reason_cst cst, Compile.Helpers.ReasonLIGO ->
         main Pat_reasonligo.run_cst pats cst
      | _ ->
