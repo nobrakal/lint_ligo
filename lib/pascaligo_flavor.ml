@@ -11,40 +11,40 @@ type wrong_flavor =
   { actual   : flavor;
     expected : string;
     got      : string;
-    region   : region
+    reg      : region
   }
 
 exception WrongFlavor of wrong_flavor
 
-let flavor_terminator region flavor option =
+let flavor_terminator reg flavor option =
   match flavor,option with
   | None,None -> Some Terse
   | None,Some _ -> Some Verbose
   | Some Terse,None | Some Verbose, Some _ -> flavor
   | Some Verbose, None ->
-     raise (WrongFlavor {actual=Verbose; expected="semicolon"; got="nothing"; region})
-  | Some Terse, Some region ->
-     raise (WrongFlavor {actual=Terse; expected="nothing"; got="semicolon"; region})
+     raise (WrongFlavor {actual=Verbose; expected="semicolon"; got="nothing"; reg})
+  | Some Terse, Some reg ->
+     raise (WrongFlavor {actual=Terse; expected="nothing"; got="semicolon"; reg})
 
 let flavor_block_enclosing flavor enclos =
   match flavor,enclos with
   | None,Block _ -> Some Terse
   | None,BeginEnd _ -> Some Verbose
   | Some Terse,Block _ | Some Verbose, BeginEnd _ -> flavor
-  | Some Verbose,Block (region,_,_) ->
-     raise (WrongFlavor {actual=Verbose; expected="begin"; got="block"; region})
-  | Some Terse, BeginEnd (region,_) ->
-     raise (WrongFlavor {actual=Terse; expected="block"; got="begin"; region})
+  | Some Verbose,Block (reg,_,_) ->
+     raise (WrongFlavor {actual=Verbose; expected="begin"; got="block"; reg})
+  | Some Terse, BeginEnd (reg,_) ->
+     raise (WrongFlavor {actual=Terse; expected="block"; got="begin"; reg})
 
 let flavor_enclosing flavor enclosing =
   match flavor,enclosing with
   | None, Brackets _ -> Some Terse
   | None, End _      -> Some Verbose
   | Some Terse,Brackets _ | Some Verbose, End _ -> flavor
-  | Some Verbose,Brackets (_,region) ->
-     raise (WrongFlavor {actual=Verbose; expected="end"; got="right bracket"; region})
-  | Some Terse, End region ->
-     raise (WrongFlavor {actual=Terse; expected="right bracket"; got="end"; region})
+  | Some Verbose,Brackets (_,reg) ->
+     raise (WrongFlavor {actual=Verbose; expected="end"; got="right bracket"; reg})
+  | Some Terse, End reg ->
+     raise (WrongFlavor {actual=Terse; expected="right bracket"; got="end"; reg})
 
 let check_opt flavor f x =
   Option.fold ~none:flavor ~some:(f flavor) x
@@ -230,9 +230,12 @@ and check_block flavor x =
 and check_statements flavor (x:statements) =
   List.fold_left check_statement flavor (Utils.nsepseq_to_list x)
 
+and check_attr_decl flavor x =
+  check_ne_injection x.region flavor (fun flavor _ -> flavor) x.value
+
 and check_statement flavor = function
-  | Attr _ -> (* TODO *)
-     flavor
+  | Attr x -> (* TODO *)
+     check_attr_decl flavor x
   | Instr x ->
      check_instr flavor x
   | Data x ->
@@ -401,20 +404,22 @@ and check_arith_expr flavor = function
   | Neg x ->
      check_unop flavor x.value
 
-and check_constdecl region flavor {const_type; init; terminator;_} =
+and check_constdecl region flavor {const_type; init; terminator; attributes; _} =
   let flavor = check_opt flavor (fun flavor (_,x) -> check_type_expr flavor x) const_type in
+  let flavor = check_opt flavor check_attr_decl attributes in
   let flavor = check_expr flavor init in
   flavor_terminator region flavor terminator
 
-and check_fundecl region flavor {param;ret_type;return; terminator; _} =
+and check_fundecl region flavor {param;ret_type;return; terminator; attributes; _} =
   let flavor = flavor_terminator region flavor terminator in
   let flavor = check_parameters flavor param in
+  let flavor = check_opt flavor check_attr_decl attributes in
   let flavor = check_opt flavor (fun flavor (_,x) -> check_type_expr flavor x) ret_type in
   check_expr flavor return
 
 let check_declaration flavor = function
-  | AttrDecl _ -> (*TODO *)
-     flavor
+  | AttrDecl x ->
+     check_attr_decl flavor x
   | TypeDecl x ->
      check_typedecl flavor x.value
   | ConstDecl x ->
@@ -434,7 +439,7 @@ let check_program flavor xs =
 let verify_program ?flavor p =
   match check_program flavor p with
   | None -> []
-  | Some {actual;expected;got;region} ->
+  | Some {actual;expected;got;reg} ->
      let str =
        "Wrong PascalLigo flavor. With "
        ^ string_of_flavor actual
@@ -442,4 +447,4 @@ let verify_program ?flavor p =
        ^ expected
        ^ "but got "
        ^ got in
-     [Simple_utils.Location.File region,str]
+     [Simple_utils.Location.File reg,str]
