@@ -74,7 +74,7 @@ let rec check_type_expr flavor = function
      flavor
   | TProd   x ->
      List.fold_left check_type_expr flavor (Utils.nsepseq_to_list x.value)
-  | TSum    x -> (* TODO LEAD VBAR ? *)
+  | TSum    x ->
      List.fold_left check_tvariant flavor (Utils.nsepseq_to_list x.value)
   | TRecord x ->
      check_trecord flavor x
