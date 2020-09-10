@@ -438,7 +438,7 @@ let check_declaration flavor = function
   | FunDecl x ->
      check_fundecl x.region flavor x.value
 
-let check_program flavor xs =
+let run ?flavor xs =
   try
     ignore @@
       List.fold_left check_declaration flavor (Utils.nseq_to_list xs.decl);
@@ -447,8 +447,8 @@ let check_program flavor xs =
   | WrongFlavor x -> Some x
 
 
-let verify_program ?flavor p =
-  match check_program flavor p with
+let format res =
+  match res with
   | None -> []
   | Some {actual;expected;got;reg} ->
      let str =

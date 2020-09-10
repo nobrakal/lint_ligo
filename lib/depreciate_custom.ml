@@ -81,5 +81,7 @@ let get_depreciated (dep : V.t) program =
   snd (List.fold_left aux (S.empty,[]) program)
 
 let run dep program =
-  let xs = get_depreciated (Var.of_name dep.Rules.dep) program in
+  get_depreciated (Var.of_name dep.Rules.dep) program
+
+let format dep xs =
   List.map (fun x -> x,make_dep_msg dep) xs

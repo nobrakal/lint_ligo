@@ -17,13 +17,13 @@ let parse_rules buf =
   Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
 
 let run_imperative program =
-  Ok (Depreciate.program program)
+  Ok (Depreciate.(format @@ run program))
 
 let run_typed ?(entrypoint="_") deps program =
-  let run ast dep = Ok (Depreciate_custom.run dep ast) in
-  let%bind typed_result = main run deps program in
+  let%bind typed_result =
+    main (fun ast dep -> Ok (Depreciate_custom.(format dep @@ run dep ast))) deps program in
   let unused =
-    Unused_variable.(make_warnings (unused_variables_of_program ~program ~entrypoint)) in
+    Unused_variable.(format @@ run ~program ~entrypoint) in
   Ok (typed_result @ unused)
 
 let run_cst lang pats cst =

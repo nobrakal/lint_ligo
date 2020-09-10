@@ -129,11 +129,11 @@ let defuse_of_program : program -> defuse = fun xs ->
     | _ -> acc (* TODO unused types ? *)
   in List.fold_left aux defuse_neutral xs
 
-let unused_variables_of_program ~program ~entrypoint : expression_variable list =
+let run ~program ~entrypoint : expression_variable list =
   let defuse,unused = defuse_of_program program in
   M.fold (fun v b acc -> add_if_not_generated ~forbidden:entrypoint v acc b) defuse unused
 
-let make_warnings xs =
+let format xs =
   let xs =
     List.sort (fun x y -> Location.(compare (get_location x) (get_location y))) xs in
   let aux v =
