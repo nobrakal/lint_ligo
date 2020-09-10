@@ -74,4 +74,4 @@ let dep_decl acc x =
 
 let program xs =
   let xs = List.fold_left dep_decl [] xs in
-  List.map (fun (x,n) -> x, "Deprecated function " ^ n) xs
+  List.map (fun (x,n) -> x, "Deprecated function " ^ n ^ ".") xs
