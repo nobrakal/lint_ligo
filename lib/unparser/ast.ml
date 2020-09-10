@@ -18,10 +18,12 @@ let string_of_ast ?(print_type=fun _ -> "") x =
 let eq_ast x y =
   let rec aux x y = match x,y with
     | Ast_lex x, Ast_lex y -> x = y
-    | Ast_node (_,x,xs), Ast_node (_,y,ys) ->
-       x = y && List.for_all2 aux xs ys
+    | Ast_node (_,_,xs), Ast_node (_,_,ys) ->
+       List.for_all2 aux xs ys
     | _ -> false
-  in aux x y
+  in
+  try aux x y
+  with Invalid_argument _ -> false
 
 let map_node f x =
   let rec aux = function
