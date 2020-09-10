@@ -58,7 +58,7 @@ will lint `file.mligo` (with entry point `entrypoint`) using the rules in `file.
 
 ## Rules syntax
 
-A rules file contains a language and a list of rule. The file must follow the following syntax:
+A rules file contains a language and a list of rules. The file must follow the following syntax:
 
 ```
 <rules> ::=
@@ -86,14 +86,14 @@ A rules file contains a language and a list of rule. The file must follow the fo
 ```
 ### Depreciation
 
-You can mark a function name as depreciated. It must be followed by a version tag, and may be followed by a suggested replacement and/or a custom message.
+You can mark a function name as depreciated. It must be followed by a version tag and may be followed by a suggested replacement and/or a custom message.
 
 ### Patterns
 
 Patterns are a way to capture the shape of a piece of code. They are composed of:
 
 * Pattern variables (identifiers preceded by `%`). Note that a "hole" variable representing an always fresh variable is available using `%_`.
-To have a better control over variables, they can be typed to match only a kind of node in the AST.
+To have better control over variables, they can be typed to match only a kind of node in the AST.
 * Meta parentheses `%(` `%)` (parentheses not included in the targeted code but useful to indicate the shape of the AST).
 * Any words.
 
