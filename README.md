@@ -14,6 +14,7 @@ The linter is fully configurable and will:
 * Detect unused variables.
 * Detect the use of deprecated functions, and allow the user to add their proper deprecations.
 * Pattern-match the code against user-defined patterns to detect the use of bad programming patterns.
+* In case of a PascaLIGO file, detect the dialect and show a warning if it uses mixed dialects.
 
 ### Example
 
@@ -42,6 +43,8 @@ Unused variable b.
 in file "taco-shop.mligo", line 2, characters 2-23:
 Useless test.
 ```
+
+See more examples in the `examples` folder.
 
 ## Usage
 
