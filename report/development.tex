@@ -7,40 +7,85 @@
 \usepackage{cite}
 
 \author{Alexandre Moine}
-\title{Lint ligo development}
+\title{Activity report about the development of a linter for LIGO}
 \date{September 14, 2020}
+
 \begin{document}
 \maketitle
+\abstract{The Tezos Foundation has provided support to the development of a linter for LIGO during August and September 2020. This document describes the main aspects of this development.}
 
-\section{Introduction}
+\section{Executive summary}
 
-\input{common}
+The developement led to a first publicly available version downloadable from:
+\begin{center}
+  \url{https://github.com/nobrakal/lint\_ligo}
+\end{center}
 
-\section{About the components}
+\paragraph{Features}
 
-\subsection{Deperacted constants}
+\verb|lint_ligo| is a command-line tool and a library which includes the following built-in features:
 
-The analysis is made by a simple traversal of the \verb|Imperative| AST. Indeed, all deprecated constants are marked as such thanks to \url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
+\begin{itemize}
+\item The detection of deprecated constants.
+\item The detection of unused variables.
+\item The detection of user-defined patterns.
+\item In the case of a PascaLIGO file, the detection of the used dialect, and if it is mixed with the other dialect.
+\end{itemize}
 
-\subsection{Unused variables}
+The linter is \textbf{extensible}. There are two ways for users to include new linting rules:
 
-The analysis is made on the \verb|Typed| AST. The AST is folded to a map linking each variable to a boolean indicating if it was used in the code or not (note that efforts were made to save this information in case of a name capture).
-This analysis mimics the one made the OCaml compiler: variables with a name starting by an underscore are not analyzed.\\
-Moreover, it is very simple and returns an under-approximation of the whole set of unused variables.
-For example with the program:
+\begin{itemize}
+\item Code patterns. When detected in the analyzed file, a custom message is printed to the user.
+\item Custom deprecated name. When such a name is detected in the analyzed file, a custom message is printed to the user.
+\end{itemize}
+
+\paragraph{Desing and implementation}
+
+The architecture of the linter is modulable: any new feature can be easily added to the linting chain as each feature is isolated from the others.\\
+The tool code base is also relatively small because the source code reuses many features offered by the LIGO compiler library.
+
+\paragraph{Community driven}
+The author collaborates with the development team to design the linter.\\
+The original proposal mentioned the introduction of a hook for a linter in the compiler. After a proof-of-concept was developed, the development team rejected the idea as it introduced unneeded complexity for the end-user.\\
+Moreover, the idea of detecting PascaLIGO dialects came from a member of the development team as a valuable addition.\\
+
+The author also collaborates with the community to understand the kind of linting rules that are the most relevant. A member of the community suggested the idea of detecting unused variables which, after a discussion with the development team, led to an integration of this feature in the linter.
+
+\paragraph{Next steps}
+
+\verb|lint_ligo| can be used by the LIGO community right now.
+However, some work can be done to improve the usability of the tool: there is a need for a standard set of linting rules for each LIGO language and the pattern-matching can be improved.
+Furthermore, it could be interesting to extend the detection of unused variables to catch more cases.
+
+\section{Details about the design and the implementation of lint-ligo}
+
+\subsection{Structure of the project}
+
+The client only offers a way to call the library.\\
+The entry point of the library is \verb|lib/main.ml|. Its \verb|main| function will, given a rules file, a contract and an entry point for the contract:
+\begin{enumerate}
+\item Parse the rules file.
+\item Call the compiler library to parse the contract and compile it to three different stages: the CST, the \verb|Imperative| AST and the \verb|Typed| AST.
+\item Run the pattern-matching and the detection of the dialect of PascaLIGO (if needed) on the CST.
+\item Then run the detection of deprecated variables on the \verb|Imperative| AST.
+\item Finally, run the detection of unused variables on the \verb|Typed| AST.
+\end{enumerate}
+
+Each pass is controlled by a module of the following signature:
 \begin{minted}{ocaml}
-  let x = 42 in
-  let y = x  in
-  ()
+  type result
+  val run : ast -> result
+  val format : result -> (Location.t * string) list
 \end{minted}
-Only the variable y will be marked as unused because of x being used in the definition of y.
+
+where the formatting function allows to get a list of located warnings, which can be printed at the end to the user.
 
 \subsection{Patterns}
 Patterns are a way to capture the shape of a piece of code. They are composed of:
 
 \begin{itemize}
 \item Pattern variables (identifiers preceded by \verb|%|). Note that a "hole" variable representing an always fresh variable is available using \verb|%_|.
-\item To have better control over variables, they can be typed to match only a kind of node in the AST using the syntax \verb|%x:type|. Types depend of the targetted LIGO language.
+\item To have better control over variables, they can be typed to match only a kind of node in the AST using the syntax \verb|%x:type|. Types depend on the targetted LIGO language.
 \item Meta parentheses \verb|%(| \verb|%)|: parentheses not included in the targeted code but useful to indicate the shape of the AST.
 \item Any words.
 \end{itemize}
@@ -55,30 +100,33 @@ The pattern matching algorithm is based on the unparsed patterns of Rinderknecht
 \item Variables can be typed. A typed variable will only match a node of the given type.
 \end{itemize}
 
+The main advantage of this approach is to avoid a (possibly difficult) extension of the syntaxes of LIGO to include holes and code-variables.
+
 \subsubsection{About unparsed patterns}
+The main module is located in \verb|lib/run_pattern.ml| which is a functor taking an unparser (from \verb|lib/unparser/|) and producing the engine. However, most of the work does not depend on any unparser and is made in \verb|lib/pattern.ml|.\\
 The linter ``unparses'' the corresponding CST to a simpler tree and then runs the pattern matching algorithm of Rinderknecht \& Volanschi \cite{unparsedpatterns}.
 Note that this work needed a small modification of the ReasonLIGO CST to include more information, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/785}.
 
 \subsection{PascaLIGO dialects}
-The analysis is of course made on the PascaLIGO CST. It is a simple fold, deducting a dialect when possible, and raising an error when two different dialects are detected.\\
-I also added an option in the compiler to choose the dialect when decompiling to PascaLIGO, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/791}.
+The analysis is located in \verb|lib/pascaligo_flavor.ml| and made on the PascaLIGO CST. It is a fold over the CST, deducting a dialect when possible, and raising an error when two different dialects are detected.\\
+An option was also added in the compiler to choose the dialect when decompiling to PascaLIGO, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/791}.
 
-\section{Other contributions}
-As I planned to work on decompiled ASTs, I made a change allowing the decompilation of typed ASTs see:
-\begin{itemize}
-\item \url{https://gitlab.com/ligolang/ligo/-/merge_requests/774}
-\item \url{https://gitlab.com/ligolang/ligo/-/merge_requests/780}
-\end{itemize}
-However, the compilation process erases much information and the decompilation does not allow yet to recover them (for example, an \verb|if then else| clause is compiled to a pattern matching of the \verb|bool| structure and decompiled as such). Consequently, I decided to only analyze the original CST and not the decompiled one.
+\subsection{Deperacted constants}
 
-\section{Further work}
-The linter is in a usable state. Some work remains yet to be done:
-\begin{itemize}
-\item Create a general set of rules for each LIGO flavor.
-\item Improve the unparsing of each CST.
-\item Improve the unused variable engine for a better approximation of the set of unused variables.
-\item Integrate the linter to code editors.
-\end{itemize}
+The analysis is located in \verb|lib/unused_variables.ml| and made by a traversal of the \verb|Imperative| AST. Indeed, all deprecated constants are marked as such thanks to \url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
+
+\subsection{Unused variables}
+
+The analysis is located in \verb|lib/deprecate.ml| and made on the \verb|Typed| AST because the structure is much simpler to analyze than structures from earlier passes. The AST is folded to a map linking each variable to a boolean indicating if it was used in the code or not (note that efforts were made to save this information in case of a name capture).
+This analysis mimics the one made the OCaml compiler: variables with a name starting by an underscore are not analyzed.\\
+Moreover, it returns an under-approximation of the whole set of unused variables.
+For example with the program:
+\begin{minted}{ocaml}
+  let x = 42 in
+  let y = x  in
+  ()
+\end{minted}
+Only the variable \verb|y| will be marked as unused because of \verb|x| being used in the definition of \verb|y|.
 
 \bibliographystyle{plain}
 \bibliography{publications}{}
