@@ -1,12 +1,14 @@
 open Rules
 open Utils
 
-module Pat_cameligo   = Run_pattern.Make(Unparser.Unparser_cameligo)
-module Pat_pascaligo  = Run_pattern.Make(Unparser.Unparser_pascaligo)
-module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
+type cst =
+  | Camel_cst of Cameligo.CST.t
+  | Pascal_cst of Pascaligo.CST.t
+  | Reason_cst of Reasonligo.CST.t
 
-let run_typed lang ast dep =
-  Ok (Depreciate.run dep lang ast)
+module Pat_cameligo  = Run_pattern.Make(Unparser.Unparser_cameligo)
+module Pat_pascaligo = Run_pattern.Make(Unparser.Unparser_pascaligo)
+module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
 
 let main run rules ast =
   Result.map List.concat @@ sequence_result @@ List.map (run ast) rules
@@ -14,24 +16,26 @@ let main run rules ast =
 let parse_rules buf =
   Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
 
-let run ?(entrypoint="_") {lang;deps;pats} = function
-  | Typed program ->
-     let%bind typed_result = main (run_typed lang) deps program in
-     let unused =
-       Unused_variable.(make_warnings (unused_variables_of_program ~program ~entrypoint)) in
-     Ok (typed_result @ unused)
-  | Cst cst ->
-     match cst,lang with
-     | Camel_cst  cst, Compile.Helpers.CameLIGO   ->
-        main Pat_cameligo.run_cst  pats cst
-     | Pascal_cst cst, Compile.Helpers.PascaLIGO  ->
-        let%bind pats = main Pat_pascaligo.run_cst pats cst in
-        let    flavor = Pascaligo_flavor.verify_program cst in
-        Ok (pats @ flavor)
-     | Reason_cst cst, Compile.Helpers.ReasonLIGO ->
-        main Pat_reasonligo.run_cst pats cst
-     | _ ->
-        Error Errors.TypeMismatch
+let run_imperative program =
+  Ok (Depreciate.program program)
+
+let run_typed ?(entrypoint="_") deps program =
+  let run ast dep = Ok (Depreciate_custom.run dep ast) in
+  let%bind typed_result = main run deps program in
+  let unused =
+    Unused_variable.(make_warnings (unused_variables_of_program ~program ~entrypoint)) in
+  Ok (typed_result @ unused)
+
+let run_cst lang pats cst =
+  match cst,lang with
+  | Camel_cst  cst, Compile.Helpers.CameLIGO   ->
+     main Pat_cameligo.run_cst  pats cst
+  | Pascal_cst cst, Compile.Helpers.PascaLIGO  ->
+     main Pat_pascaligo.run_cst pats cst
+  | Reason_cst cst, Compile.Helpers.ReasonLIGO ->
+     main Pat_reasonligo.run_cst pats cst
+  | _ ->
+     Error Errors.TypeMismatch
 
 let from_compiler_result x = match x with
   | Ok (x,_) -> Ok x
@@ -88,9 +92,10 @@ let prepare_result =
 let main ~rules ~file ~entrypoint =
   let%bind syntax =
     from_compiler_result @@ Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
-  let%bind rules   = parse_rules rules in
+  let%bind {lang;pats;deps} = parse_rules rules in
   let%bind (imperative,cst) = parse_file syntax file in
   let%bind ast = compile_to_typed entrypoint imperative in
-  let%bind result_cst = run ~entrypoint rules (Cst cst) in
-  let%bind result_ast = run ~entrypoint rules (Typed ast) in
-  Ok (prepare_result (result_cst @ result_ast))
+  let%bind result_imp = run_imperative imperative in
+  let%bind result_cst = run_cst lang pats cst in
+  let%bind result_ast = run_typed ~entrypoint deps ast in
+  Ok (prepare_result (result_imp @ result_cst @ result_ast))

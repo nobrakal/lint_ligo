@@ -1,94 +1,77 @@
-open Rules
+open Ast_imperative
 
-(* Create the message for a depreciated function *)
-let make_dep_msg {dep; dep_version; dep_replacement; dep_message} =
-  let with_default f = Option.fold ~none:"" ~some:f in
-  let repl = with_default (fun x -> "A possible replacement is " ^ x ^ ".") dep_replacement in
-  let mess = with_default (fun x -> " " ^ x ^ ".") dep_message in
-  dep ^ " was depreciated in version "  ^ dep_version ^ "." ^ repl ^ mess
-
-open Simple_utils
-
-open Location
-open Ast_typed
-
-module H = Compile.Helpers
-
-module V = struct
-  type t = expression_ Var.t
-
-  let compare = Simple_utils.Var.compare
-end
-
-module S = Set.Make(V)
-
-let cons_of_syntax = function
-  | H.CameLIGO -> Predefined.Tree_abstraction.Cameligo.constant_to_string
-  | H.PascaLIGO -> Predefined.Tree_abstraction.Pascaligo.constant_to_string
-  | H.ReasonLIGO -> Predefined.Tree_abstraction.Reasonligo.constant_to_string
-
-let adds xs acc = List.fold_left (fun acc x -> S.add x acc) acc xs
-
-let rec expression dep syntax defs x =
-  let expression' defs x = expression dep syntax defs x in
-  let add_if_eq e =
-    if Var.equal dep e then [x.location] else []  in
+let rec dep_expr acc  x =
   match x.expression_content with
-  | E_literal _ ->
-     []
-  | E_constructor {element;_} ->
-     expression' defs element
-  | E_constant {cons_name; arguments} ->
-     let xs = List.(concat (map (expression' defs) arguments)) in
-     let x = add_if_eq (Var.of_name (cons_of_syntax syntax cons_name)) in
-     x@xs
-  | E_variable v ->
-     add_if_eq (unwrap v)
+  | E_literal _ | E_variable _ | E_skip ->
+     acc
+  | E_constant {cons_name;arguments} ->
+     let acc = match cons_name with
+     | Deprecated e -> (x.location,e.name)::acc
+     | Const _ -> acc in
+     List.fold_left dep_expr acc arguments
   | E_application {lamb;args} ->
-     expression' defs lamb @ expression' defs args
-  | E_lambda {binder; result} ->
-     expression' (S.add (unwrap binder) defs) result
-  | E_recursive {fun_name;lambda;_} ->
-     expression' (adds [unwrap fun_name; unwrap lambda.binder] defs) lambda.result
-  | E_let_in {let_binder;rhs;let_result;_} ->
-     let rhs = expression' defs rhs in
-     let let_result = expression' (S.add (unwrap let_binder) defs) let_result in
-     rhs @ let_result
-  | E_raw_code {language;code} ->
-     begin match Compile.Helpers.syntax_to_variant (H.Syntax_name language) None with
-     | Error _e -> failwith "TODO"
-     | Ok (syntax',_) -> expression dep syntax' defs code end
+     dep_expr (dep_expr acc lamb) args
+  | E_lambda {result;_} | E_recursive {lambda={result;_};_} ->
+     dep_expr acc result
+  | E_let_in {rhs;let_result;_} ->
+     dep_expr (dep_expr acc rhs) let_result
+  | E_raw_code {code;_} ->
+     dep_expr acc code
+  (* Variant *)
+  | E_constructor {element;_} ->
+     dep_expr acc element
   | E_matching {matchee;cases} ->
-     let xs = expression' defs matchee in
-     xs @ matching_cases expression' defs cases
-  | E_record re ->
-     Stage_common.Types.LMap.fold (fun _ x acc -> acc @ expression' defs x) re []
-  | E_record_accessor {record;_} ->
-     expression' defs record
-  | E_record_update {record;update;_} ->
-     expression' defs record @  expression' defs update
+     dep_cases (dep_expr acc matchee) cases
+  (* Record *)
+  | E_record record ->
+     LMap.fold (fun _ x acc -> dep_expr acc x) record acc
+  | E_accessor {record;path;_} ->
+     List.fold_left dep_access (dep_expr acc record) path
+  | E_update  {record;update;path;_} ->
+     let acc = dep_expr (dep_expr acc record) update in
+     List.fold_left dep_access acc path
+  (* Advanced *)
+  | E_ascription {anno_expr;_} ->
+     dep_expr acc anno_expr
+  (* Sugar *)
+  | E_cond {condition;then_clause;else_clause} ->
+     List.fold_left dep_expr acc [condition;then_clause;else_clause]
+  | E_sequence {expr1;expr2} ->
+     dep_expr (dep_expr acc expr1) expr2
+  | E_tuple xs | E_list xs | E_set xs ->
+     List.fold_left dep_expr acc xs
+  (* Data Structures *)
+  | E_map xs | E_big_map xs ->
+     List.fold_left (fun acc (x,y) -> dep_expr (dep_expr acc x) y) acc xs
+  (* Imperative *)
+  | E_assign {expression;access_path;_} ->
+     List.fold_left dep_access (dep_expr acc expression) access_path
+  | E_for {start;final;increment;body;_} ->
+     List.fold_left dep_expr acc [start;final;increment;body]
+  | E_for_each {collection;body;_} ->
+     dep_expr (dep_expr acc collection) body
+  | E_while {condition;body} ->
+     dep_expr (dep_expr acc condition) body
 
-and matching_cases expression' defs = function
-  | Match_list {match_nil;match_cons} ->
-     let {hd;tl;body;_} = match_cons in
-     expression' defs match_nil @ expression' (adds [unwrap hd; unwrap tl] defs) body
-  | Match_option {match_none;match_some} ->
-     let {opt;body;_} = match_some in
-      expression' defs match_none @ expression' (S.add (unwrap opt) defs) body
-  | Match_variant {cases;_} ->
-     List.(concat (map (fun {pattern;body;_} -> expression' (S.add (unwrap pattern) defs) body) cases))
+and dep_cases acc = function
+  | Match_variant xs ->
+     List.fold_left (fun acc (_,x) -> dep_expr acc x) acc xs
+  | Match_list {match_nil;match_cons=(_,_,x)} ->
+     dep_expr (dep_expr acc match_nil) x
+  | Match_option {match_none;match_some=(_,x)} ->
+     dep_expr (dep_expr acc match_none) x
+  | Match_tuple  (_,x) | Match_record (_,x) | Match_variable (_,x) ->
+     dep_expr acc x
 
-let get_depreciated (dep : V.t) syntax program =
-  let aux ((defs,xs) as acc) (x : declaration_loc) =
-    match unwrap x with
-    | Declaration_constant {binder;expr;_} ->
-       let defs' = S.add (unwrap binder) defs in
-       let xs = xs@expression dep syntax defs expr in
-       defs',xs
-    | _ -> acc
-  in
-  snd (List.fold_left aux (S.empty,[]) program)
+and dep_access acc = function
+  | Access_tuple _ | Access_record _ -> acc
+  | Access_map x -> dep_expr acc x
 
-let run dep syntax program =
-  let xs = get_depreciated (Var.of_name dep.Rules.dep) syntax program in
-  List.map (fun x -> x,make_dep_msg dep) xs
+let dep_decl acc x =
+  match Location.unwrap x with
+  | Declaration_type _ -> acc
+  | Declaration_constant (_,_,_,x) -> dep_expr acc x
+
+let program xs =
+  let xs = List.fold_left dep_decl [] xs in
+  List.map (fun (x,n) -> x, "Deprecated function " ^ n) xs
