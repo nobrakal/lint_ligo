@@ -1,0 +1,5 @@
+language reasonligo
+
+pattern expr %{ if %_ { %x } else { %x } %} message "Useless test."
+pattern expr %{ ( ( %x ) ) %} message "Too much parantheses."
+pattern expr %{ let %x = %_ ; %x %} message "Too much parantheses."
