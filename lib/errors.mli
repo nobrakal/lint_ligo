@@ -1,3 +1,4 @@
+(* All errors of the linter *)
 type t =
   | Bad_type of string
   | Ast_parsing of string
