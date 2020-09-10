@@ -6,8 +6,8 @@ type cst =
   | Pascal_cst of Pascaligo.CST.t
   | Reason_cst of Reasonligo.CST.t
 
-module Pat_cameligo  = Run_pattern.Make(Unparser.Unparser_cameligo)
-module Pat_pascaligo = Run_pattern.Make(Unparser.Unparser_pascaligo)
+module Pat_cameligo   = Run_pattern.Make(Unparser.Unparser_cameligo)
+module Pat_pascaligo  = Run_pattern.Make(Unparser.Unparser_pascaligo)
 module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
 
 let main run rules ast =
@@ -94,8 +94,8 @@ let main ~rules ~file ~entrypoint =
     from_compiler_result @@ Compile.Helpers.(syntax_to_variant (Syntax_name "auto") (Some file)) in
   let%bind {lang;pats;deps} = parse_rules rules in
   let%bind (imperative,cst) = parse_file syntax file in
-  let%bind ast = compile_to_typed entrypoint imperative in
-  let%bind result_imp = run_imperative imperative in
-  let%bind result_cst = run_cst lang pats cst in
-  let%bind result_ast = run_typed ~entrypoint deps ast in
-  Ok (prepare_result (result_imp @ result_cst @ result_ast))
+  let%bind typed = compile_to_typed entrypoint imperative in
+  let%bind result_imp   = run_imperative imperative in
+  let%bind result_cst   = run_cst lang pats cst in
+  let%bind result_typed = run_typed ~entrypoint deps typed in
+  Ok (prepare_result (result_imp @ result_cst @ result_typed))
