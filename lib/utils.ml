@@ -13,6 +13,14 @@ let list_map_to_opt f xs =
   | [] -> None
   | xs -> Some (f xs)
 
+let string_of_var =
+  let buf = Buffer.create 16 in
+  fun v ->
+  let f = Format.formatter_of_buffer buf in
+  Simple_utils.Var.pp f v; Format.pp_print_flush f ();
+  let var = Buffer.contents buf in
+  Buffer.clear buf; var
+
 module Let_syntax = struct
   let return x = Ok x
   let map x ~f = Result.map f x

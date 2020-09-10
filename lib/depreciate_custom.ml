@@ -1,7 +1,8 @@
 open Rules
+open Utils
 
 (* Create the message for a depreciated function *)
-let make_dep_msg {dep; dep_version; dep_replacement; dep_message} =
+let make_dep_msg dep (dep_version, dep_replacement, dep_message) =
   let with_default f = Option.fold ~none:"" ~some:f in
   let repl = with_default (fun x -> "A possible replacement is " ^ x ^ ".") dep_replacement in
   let mess = with_default (fun x -> " " ^ x ^ ".") dep_message in
@@ -21,13 +22,14 @@ module V = struct
 end
 
 module S = Set.Make(V)
+module M = Map.Make(String)
 
 let adds xs acc = List.fold_left (fun acc x -> S.add x acc) acc xs
 
-let rec expression dep defs x =
-  let expression' defs x = expression dep defs x in
+let rec expression deps defs x =
+  let expression' defs x = expression deps defs x in
   let add_if_eq e =
-    if Var.equal dep e then [x.location] else []  in
+    if S.mem e deps then [string_of_var e,x.location] else []  in
   match x.expression_content with
   | E_literal _ ->
      []
@@ -48,7 +50,7 @@ let rec expression dep defs x =
      let let_result = expression' (S.add (unwrap let_binder) defs) let_result in
      rhs @ let_result
   | E_raw_code {code;_} ->
-     expression dep defs code
+     expression deps defs code
   | E_matching {matchee;cases} ->
      let xs = expression' defs matchee in
      xs @ matching_cases expression' defs cases
@@ -69,19 +71,25 @@ and matching_cases expression' defs = function
   | Match_variant {cases;_} ->
      List.(concat (map (fun {pattern;body;_} -> expression' (S.add (unwrap pattern) defs) body) cases))
 
-let get_depreciated (dep : V.t) program =
+let get_depreciated deps program =
   let aux ((defs,xs) as acc) (x : declaration_loc) =
     match unwrap x with
     | Declaration_constant {binder;expr;_} ->
        let defs' = S.add (unwrap binder) defs in
-       let xs = xs@expression dep defs expr in
+       let xs = xs@expression deps defs expr in
        defs',xs
     | _ -> acc
   in
   snd (List.fold_left aux (S.empty,[]) program)
 
-let run dep program =
-  get_depreciated (Var.of_name dep.Rules.dep) program
+let mk_deps xs =
+  let aux acc {dep; dep_version; dep_replacement; dep_message} =
+    M.add dep (dep_version,dep_replacement,dep_message) acc
+  in List.fold_left aux M.empty xs
 
-let format dep xs =
-  List.map (fun x -> x,make_dep_msg dep) xs
+let run deps program =
+  get_depreciated  (S.of_list (List.map (fun x -> Var.of_name x.Rules.dep) deps)) program
+
+let format deps xs =
+  let deps = mk_deps deps in
+  List.map (fun (e,x) -> x, make_dep_msg e (M.find e deps)) xs

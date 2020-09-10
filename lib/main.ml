@@ -10,9 +10,6 @@ module Pat_cameligo   = Run_pattern.Make(Unparser.Unparser_cameligo)
 module Pat_pascaligo  = Run_pattern.Make(Unparser.Unparser_pascaligo)
 module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
 
-let main run rules ast =
-  Result.map List.concat @@ sequence_result @@ List.map (run ast) rules
-
 let parse_rules buf =
   Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
 
@@ -20,20 +17,20 @@ let run_imperative program =
   Ok (Depreciate.(format @@ run program))
 
 let run_typed ?(entrypoint="_") deps program =
-  let%bind typed_result =
-    main (fun ast dep -> Ok (Depreciate_custom.(format dep @@ run dep ast))) deps program in
-  let unused =
-    Unused_variable.(format @@ run ~program ~entrypoint) in
+  let typed_result = Depreciate_custom.(format deps @@ run deps program) in
+  let unused       = Unused_variable.(format @@ run ~program ~entrypoint) in
   Ok (typed_result @ unused)
 
 let run_cst lang pats cst =
+  let main run cst =
+    Result.map List.concat @@ sequence_result @@ List.map (run cst) pats in
   match cst,lang with
   | Camel_cst  cst, Compile.Helpers.CameLIGO   ->
-     main Pat_cameligo.run_cst  pats cst
+     main Pat_cameligo.run_cst  cst
   | Pascal_cst cst, Compile.Helpers.PascaLIGO  ->
-     main Pat_pascaligo.run_cst pats cst
+     main Pat_pascaligo.run_cst cst
   | Reason_cst cst, Compile.Helpers.ReasonLIGO ->
-     main Pat_reasonligo.run_cst pats cst
+     main Pat_reasonligo.run_cst cst
   | _ ->
      Error Errors.TypeMismatch
 

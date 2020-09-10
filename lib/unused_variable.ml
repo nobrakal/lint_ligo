@@ -1,3 +1,4 @@
+open Utils
 open Simple_utils
 
 open Ast_typed
@@ -26,14 +27,6 @@ let defuse_unions defuse =
 
 let replace_opt k x m =
   Stdlib.Option.fold ~none:(M.remove k m) ~some:(fun x -> M.add k x m) x
-
-let string_of_var =
-  let buf = Buffer.create 16 in
-  fun v ->
-  let f = Format.formatter_of_buffer buf in
-  Var.pp f v; Format.pp_print_flush f ();
-  let var = Buffer.contents buf in
-  Buffer.clear buf; var
 
 let add_if_not_generated ?forbidden x xs b =
   let v = Location.unwrap x in
