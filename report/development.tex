@@ -26,11 +26,11 @@ The analysis is made by a simple traversal of the \verb|Imperative| AST. Indeed,
 
 The analysis is made on the \verb|Typed| AST. The AST is folded to a map linking each variable to a boolean indicating if it was used in the code or not (note that efforts were made to save this information in case of a name capture).
 This analysis mimics the one made the OCaml compiler: variables with a name starting by an underscore are not analyzed.\\
-Moreover, it is very simple and is an under-approximation of the whole set of unused variables.
+Moreover, it is very simple and returns an under-approximation of the whole set of unused variables.
 For example with the program:
 \begin{minted}{ocaml}
-  let x = 4 in
-  let y = x in
+  let x = 42 in
+  let y = x  in
   ()
 \end{minted}
 Only the variable y will be marked as unused because of x being used in the definition of y.
@@ -40,7 +40,7 @@ Patterns are a way to capture the shape of a piece of code. They are composed of
 
 \begin{itemize}
 \item Pattern variables (identifiers preceded by \verb|%|). Note that a "hole" variable representing an always fresh variable is available using \verb|%_|.
-\item To have better control over variables, they can be typed to match only a kind of node in the AST using the syntax \verb|%x:type|. Types depend of the LIGO language targetted.
+\item To have better control over variables, they can be typed to match only a kind of node in the AST using the syntax \verb|%x:type|. Types depend of the targetted LIGO language.
 \item Meta parentheses \verb|%(| \verb|%)|: parentheses not included in the targeted code but useful to indicate the shape of the AST.
 \item Any words.
 \end{itemize}
@@ -69,7 +69,7 @@ As I planned to work on decompiled ASTs, I made a change allowing the decompilat
 \item \url{https://gitlab.com/ligolang/ligo/-/merge_requests/774}
 \item \url{https://gitlab.com/ligolang/ligo/-/merge_requests/780}
 \end{itemize}
-However, the compilation process erases much information and the decompilation does not allow yet to recover them (for example, an \verb|if then else| clause is compiled to a pattern matching of the \verb|bool| structure and decompiled as such).
+However, the compilation process erases much information and the decompilation does not allow yet to recover them (for example, an \verb|if then else| clause is compiled to a pattern matching of the \verb|bool| structure and decompiled as such). Consequently, I decided to only analyze the original CST and not the decompiled one.
 
 \section{Further work}
 The linter is in a usable state. Some work remains yet to be done:

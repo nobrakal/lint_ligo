@@ -5,7 +5,7 @@ The library heavily reuses the interface of the LIGO compiler to compile partial
 The linter is modular and contains at this time four components:
 
 \begin{itemize}
-\item The detection of the use of deprecated constants.
+\item The detection of deprecated constants.
 \item The detection of unused variables.
 \item The detection of user-defined patterns.
 \item In the case of a PascaLIGO file, the detection of the used dialect, and if it is mixed with the other dialect.
@@ -18,4 +18,5 @@ The linter can be configured by the user through a configuration file containing
 \item Custom deprecated name. When such a name is detected in the analyzed file, a custom message is printed to the user.
 \end{itemize}
 
-The original proposal mentioned the introduction of a hook for a linter in the compiler. After a proof-of-concept was developed, the development team rejected the idea as it introduced unneeded complexity for the end-user.
+The original proposal mentioned the introduction of a hook for a linter in the compiler. After a proof-of-concept was developed, the development team of LIGO rejected the idea as it introduced unneeded complexity for the end-user.\\
+On the contrary, the idea of detecting unused variables came for the LIGO community and the idea of detecting PascaLIGO dialects from the LIGO development team.
