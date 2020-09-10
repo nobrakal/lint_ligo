@@ -15,10 +15,10 @@ let parse_rules buf =
   with Lint_parser.Error -> Error Errors.RulesParsing
 
 let run_imperative program =
-  Ok (Depreciate.(format @@ run program))
+  Ok (Deprecate.(format @@ run program))
 
 let run_typed ?(entrypoint="_") deps program =
-  let typed_result = Depreciate_custom.(format deps @@ run deps program) in
+  let typed_result = Deprecate_custom.(format deps @@ run deps program) in
   let unused       = Unused_variable.(format @@ run ~program ~entrypoint) in
   Ok (typed_result @ unused)
 
