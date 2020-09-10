@@ -5,5 +5,6 @@ type t =
   | Compiler of Main_errors.all
   | Bad_language of string
   | TypeMismatch
+  | RulesParsing
 
 val to_string : t -> string

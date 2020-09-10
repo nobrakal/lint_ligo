@@ -11,7 +11,8 @@ module Pat_pascaligo  = Run_pattern.Make(Unparser.Unparser_pascaligo)
 module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
 
 let parse_rules buf =
-  Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
+  try Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
+  with Lint_parser.Error -> Error Errors.RulesParsing
 
 let run_imperative program =
   Ok (Depreciate.(format @@ run program))

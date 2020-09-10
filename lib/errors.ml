@@ -4,6 +4,7 @@ type t =
   | Compiler of Main_errors.all
   | Bad_language of string
   | TypeMismatch
+  | RulesParsing
 
 let compiler_err err =
   let open Simple_utils.Display in
@@ -19,3 +20,4 @@ let to_string = function
   | Compiler c -> compiler_err c
   | Bad_language x -> "Unknown language: " ^ x ^ "."
   | TypeMismatch -> "There is a type mismatch between the file and the language of rules."
+  | RulesParsing -> "Parse error of the rules."
