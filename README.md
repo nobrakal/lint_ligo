@@ -25,22 +25,22 @@ language cameligo
 pattern expr %{ if %_ then %x else %x %} message "Useless test."
 ```
 
-and the cameligo file:
+and the cameligo file `test.mligo`:
 
 ```
-let f (x:int) (b:bool) =
-  if true then x else x
+let f (b:bool) (x:int) (y:int)  =
+  if b then x else x
 
 let main (action, store : int * int) =
- ([] : operation list), f store false
+ ([] : operation list), f false action store
 ```
 
 the linter will print:
 
 ```
-in file "taco-shop.mligo", line 1, characters 14-22:
-Unused variable b.
-in file "taco-shop.mligo", line 2, characters 2-23:
+in file "test.mligo", line 1, characters 23-30:
+Unused variable y.
+in file "test.mligo", line 2, characters 2-20:
 Useless test.
 ```
 
