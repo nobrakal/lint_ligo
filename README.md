@@ -5,7 +5,7 @@ A linter for the [LIGO](https://ligolang.org/) language.
 ## Build
 
 `lint_ligo` uses [dune](https://github.com/ocaml/dune) as a build system.
-To build the executable, just run `dune build bin/main.exe`.
+To build the executable, just run `dune build bin/main.exe` (or `opam install .`).
 
 ## Features
 
