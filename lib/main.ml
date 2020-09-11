@@ -39,33 +39,50 @@ let from_compiler_result x = match x with
   | Ok (x,_) -> Ok x
   | Error e  -> Error (Errors.Compiler e)
 
-let parse_file syntax file =
+let cst_of_file syntax file =
   let open Compile.Helpers in
   match syntax with
   | CameLIGO ->
-     let%bind raw = from_compiler_result @@
-       Simple_utils.Trace.trace Main_errors.parser_tracer @@
-         Parser.Cameligo.parse_file file in
-     let%bind imperative = from_compiler_result @@
-       Simple_utils.Trace.trace Main_errors.cit_cameligo_tracer @@
-         Tree_abstraction.Cameligo.compile_program raw in
-     Ok (imperative, Camel_cst raw)
+     let%bind cst =
+       from_compiler_result @@
+         Simple_utils.Trace.trace Main_errors.parser_tracer @@
+           Parser.Cameligo.parse_file file in
+     Ok (Camel_cst cst)
   | PascaLIGO ->
-     let%bind raw = from_compiler_result @@
-       Simple_utils.Trace.trace Main_errors.parser_tracer @@
-         Parser.Pascaligo.parse_file file in
-     let%bind imperative = from_compiler_result @@
-       Simple_utils.Trace.trace Main_errors.cit_pascaligo_tracer @@
-         Tree_abstraction.Pascaligo.compile_program raw in
-     Ok (imperative, Pascal_cst raw)
+     let%bind cst =
+       from_compiler_result @@
+         Simple_utils.Trace.trace Main_errors.parser_tracer @@
+           Parser.Pascaligo.parse_file file in
+     Ok (Pascal_cst cst)
   | ReasonLIGO ->
-     let%bind raw = from_compiler_result @@
-       Simple_utils.Trace.trace Main_errors.parser_tracer @@
-         Parser.Reasonligo.parse_file file in
-     let%bind imperative = from_compiler_result @@
+     let%bind cst =
+       from_compiler_result @@
+         Simple_utils.Trace.trace Main_errors.parser_tracer @@
+           Parser.Reasonligo.parse_file file in
+     Ok (Reason_cst cst)
+
+let imperative_of_cst cst =
+  from_compiler_result @@
+    match cst with
+    | Camel_cst raw ->
+       Simple_utils.Trace.trace Main_errors.cit_cameligo_tracer @@
+         Tree_abstraction.Cameligo.compile_program raw
+    | Pascal_cst raw ->
+       Simple_utils.Trace.trace Main_errors.cit_pascaligo_tracer @@
+         Tree_abstraction.Pascaligo.compile_program raw
+    | Reason_cst raw ->
        Simple_utils.Trace.trace Main_errors.cit_reasonligo_tracer @@
-         Tree_abstraction.Reasonligo.compile_program raw in
-     Ok (imperative, Reason_cst raw)
+         Tree_abstraction.Reasonligo.compile_program raw
+
+let parse_file syntax file =
+  let open Compile.Helpers in
+  let%bind cst = cst_of_file syntax file in
+  let%bind imperative = imperative_of_cst cst in
+  let%bind imperative =
+    from_compiler_result @@
+      Simple_utils.Trace.trace Main_errors.self_ast_imperative_tracer @@
+        Self_ast_imperative.all_program imperative in
+  Ok (imperative,cst)
 
 let compile_to_typed entry_point imperative =
   let%bind sugar   = from_compiler_result @@ Compile.Of_imperative.compile imperative in
