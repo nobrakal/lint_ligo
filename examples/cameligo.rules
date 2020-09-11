@@ -3,3 +3,5 @@ language cameligo
 pattern expr %{ if %_ then %x else %x %} message "Useless test."
 pattern expr %{ ( ( %x ) ) %} message "Too much parantheses."
 pattern expr %{ let %x = %_ in %x %} message "Useless let definition."
+
+pattern type %{ %x of unit %} message "The variant `%x of unit` is equivalent to `%x`."
