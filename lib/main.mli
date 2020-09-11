@@ -1,1 +1,3 @@
-val main : rules:Lexing.lexbuf -> file:string -> entrypoint:string -> (string option, Errors.t) result
+val main :
+  ?syntax:string -> ?rules:string -> file:string -> entrypoint:string
+  -> (string option, Errors.t) result

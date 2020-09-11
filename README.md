@@ -51,10 +51,13 @@ See more examples in the `examples` folder.
 The command
 
 ```
-lint_ligo file.rules file.mligo entrypoint
+lint_ligo -r file.rules file.mligo entrypoint
 ```
 
 will lint `file.mligo` (with entry point `entrypoint`) using the rules in `file.rules`.
+
+Note that you can call the linter without a rules file. In this case, only deprecated constants
+and unused variables will be detected.
 
 ## Rules syntax
 

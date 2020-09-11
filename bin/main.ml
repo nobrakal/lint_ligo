@@ -1,6 +1,5 @@
-let main rules file entrypoint =
-  let rules = Lexing.from_channel (open_in rules) in
-  match Lint_ligo.Main.main ~rules ~file ~entrypoint with
+let main syntax rules file entrypoint =
+  match Lint_ligo.Main.main ?syntax ?rules ~file ~entrypoint with
   | Ok None ->
      0
   | Ok (Some result) ->
@@ -14,21 +13,25 @@ open Cmdliner
 
 let rules =
   let doc = "Rules for the linter." in
-  Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"RULES_FILE")
+  Arg.(value & opt (some string) None & info ["r"; "rules"] ~docv:"RULES_FILE" ~doc)
+
+let syntax =
+  let doc = "The syntax of the file." in
+  Arg.(value & opt (some string) None & info ["s"; "syntax"] ~docv:"SYNTAX" ~doc)
 
 let file =
   let doc = "The LIGO contract to lint." in
-  Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
+  Arg.(required & pos 0 (some string) None & info [] ~doc ~docv:"LIGO_FILE")
 
 let entry_point =
   let doc = "The entry point of the contract." in
-  Arg.(required & pos 2 (some string) None & info [] ~doc ~docv:"ENTRY_POINT")
+  Arg.(required & pos 1 (some string) None & info [] ~doc ~docv:"ENTRY_POINT")
 
 let lint =
   let info =
     let doc = "Subcommand: lint a file with the given rules." in
     Term.info ~doc "lint_ligo" in
-  let t = Term.(const main $ rules $ file $ entry_point) in
+  let t = Term.(const main $ syntax $ rules $ file $ entry_point) in
   t,info
 
 let () =
