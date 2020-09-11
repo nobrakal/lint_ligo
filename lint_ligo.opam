@@ -12,13 +12,14 @@ build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
-  "dune"     {build >= "1.0.0"}
-  "menhir"
+  "dune"    {build >= "1.0.0"}
+  "menhir"  {>= "20190626"}
   "yojson"
   "ligo"
   "cmdliner"
 ]
 synopsis: "A linter for the LIGO language"
 description: """
-A linter for the LIGO language.
+A linter for the LIGO language featuring detection of unused variables,\
+deprecated constants and user-defined patterns.
 """
