@@ -96,6 +96,7 @@ let compile_to_typed entry_point imperative =
 let string_of_result (loc,x) =
   let buff = Buffer.create 42 in
   let format = Format.formatter_of_buffer buff in
+  Buffer.add_string buff ("Linter error ");
   Simple_utils.Location.pp format loc;
   Format.pp_print_flush format ();
   Buffer.add_string buff (":\n" ^ x);
