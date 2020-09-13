@@ -452,7 +452,7 @@ let format res =
   | None -> []
   | Some {actual;expected;got;reg} ->
      let str =
-       "Mixed PascalLigo flavors. With inferred "
+       "Mixed PascaLigo flavors. With inferred "
        ^ string_of_flavor actual
        ^ " flavor, expected "
        ^ expected
