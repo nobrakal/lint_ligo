@@ -1,0 +1,67 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+\usepackage{minted}
+\author{Alexandre Moine}
+\title{Roadmap to lint\_ligo 2.0}
+\begin{document}
+\maketitle
+
+This document lists several possibilities for the future of \verb|lint_ligo|, a linter for LIGO.
+
+\paragraph{Integration in integrated development environments}
+A linter is even more useful when integrated into an IDE, as linting errors could be displayed directly to the user.
+An integrated \verb|lint_ligo| could be a serious argument for the adoption of the linter by the community.
+
+\paragraph{A standard set of linting rules}
+
+The linter provides an efficient pattern-matching algorithm but it needs a concrete set of patterns to be useful. Some are available in the \verb|examples/| directory but they are too few, code patterns should be added to create a concrete standard set of linting rules.
+
+\paragraph{Deep patterns}
+Some code patterns target more the code structure than its exact shape, and can be considered as such ``deep''. For example, the 3 definitions of the following \verb|option| function in CameLIGO:
+\begin{minted}{ocaml}
+let option (default : int) (x : int option) : int =
+  match x with
+  | None -> default
+  | Some x -> x
+
+let option (default : int) (x : int option) : int =
+  match x with
+  | Some x -> x
+  | None -> default
+
+let option (default : int) (x : int option) : int =
+  match x with
+    None -> default
+  | Some x -> x
+\end{minted}
+
+are all equivalent and should be in some cases matched by the same pattern.\\
+This is actually not the case as the actual pattern-matching algorithm is based on the CST, the first structure of the compilation pipeline. This structure still contains many textual information mainly irrelevant for a ``deep'' pattern (like the order of a pattern matching or the leading vertical bar).
+
+An improvement could be to normalize the CST by a compilation followed by a decompilation before running the algorithm. Irrelevant information is erased during the first stages of the compilation and the decompilation allows to run the existing pattern-matching algorithm.
+
+\paragraph{A stronger detection of unused variables}
+
+The actual algorithm used for detecting unused variables returns an under-approximation of the full set of unused variables. It only detects for each variable if it is being used, but does not propagate the information.\\
+For example with the program:
+\begin{minted}{ocaml}
+  let x = 42 in
+  let y = x  in
+  ()
+\end{minted}
+Only the variable \verb|y| will be marked as unused because of \verb|x| being used in the definition of \verb|y|.
+
+A possible improvement is to use a refined algorithm ``propagating'' the information: in the previous example, the algorithm should be aware that, as \verb|y| is unused and \verb|x| is only used in its definition, \verb|x| is finally not used.
+
+\paragraph{Detection of unused types}
+
+For now, the unused variables algorithm ignores types. It could be interesting to verify if locally defined types are actually used in the code.
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
