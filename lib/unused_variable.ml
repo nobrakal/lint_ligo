@@ -7,14 +7,26 @@ module V = struct
 
   type t = expression_variable
 
-  let compare x y = compare (Location.unwrap x) (Location.unwrap y)
+  (* We compare variables _modulo_ their location. *)
+  let compare x y = Var.compare (Location.unwrap x) (Location.unwrap y)
 end
 
 module S = Set.Make(V)
 module M = Map.Make(V)
 
-(* A map recording if a variable is being used * a list of unused variables *)
+(* A map recording if a variable is being used * a list of unused variables. *)
 type defuse = bool M.t * V.t list
+
+(* This function also returns the original key, as it contains the original location. *)
+let find_opt target m =
+  let aux k v x =
+    match x with
+    | None ->
+       if V.compare target k = 0
+       then Some (k,v) else None
+    | Some _ -> x
+  in
+  M.fold aux m None
 
 let defuse_union (x,a) (y,b) =
   M.union (fun _ x y -> Some (x||y)) x y, a@b
@@ -43,9 +55,10 @@ let remove_defined_var_after defuse binder f expr =
   replace_opt binder old_binder defuse, unused
 
 let add_if_unused unused binder defuse =
-  match M.find_first_opt (fun k -> V.compare k binder = 0) defuse with
+  match find_opt binder defuse with
   | None -> unused
-  | Some (k,b) -> add_if_not_generated k unused b
+  | Some (k,b) ->
+     add_if_not_generated k unused b
 
 (* Return a def-use graph + a list of unused variables *)
 let rec defuse_of_expr defuse expr : defuse =
