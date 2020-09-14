@@ -45,16 +45,16 @@ The architecture of the linter is modular: any new feature can be easily added t
 The tool code base is also relatively small because the source code reuses many features offered by the LIGO compiler library.
 
 \paragraph{Community driven}
-The author collaborates with the development team to design the linter.\\
-The original proposal mentioned the introduction of a hook for a linter in the compiler. After a proof-of-concept was developed, the development team rejected the idea as it introduced unneeded complexity for the end-user.\\
-Moreover, the idea of detecting PascaLIGO dialects came from a member of the development team as a valuable addition.\\
+The author collaborates with the LIGO team to design the linter.\\
+The original proposal mentioned the introduction of a hook for a linter in the compiler. After a proof of concept was developed, the LIGO team rejected the idea as it introduced unneeded complexity for the end-user.\\
+Moreover, the idea of detecting PascaLIGO dialects came from a member of the LIGO team as a valuable addition.\\
 
-The author also collaborates with the community to understand the kind of linting rules that are the most relevant. A member of the community suggested the idea of detecting unused variables which, after a discussion with the development team, led to an integration of this feature in the linter.
+The author also collaborates with the community to understand the kind of linting rules that are the most relevant. A member of the community suggested the idea of detecting unused variables which, after a discussion with the LIGO team, led to an integration of this feature in the linter.
 
 \paragraph{Next steps}
 
 \verb|lint_ligo| can be used by the LIGO community right now.
-However, some work can be done to improve the usability of the tool: there is a need for a standard set of linting rules for each LIGO language and the pattern-matching can be improved.
+However, some work can be done to improve the usability of the tool: there is a need for a standard set of linting rules for each LIGO language and the pattern matching can be improved.
 Furthermore, it could be interesting to extend the detection of unused variables to catch more cases.
 
 \section{Details about the design and the implementation of lint-ligo}
@@ -66,7 +66,7 @@ The entry point of the library is \verb|lib/main.ml|. Its \verb|main| function w
 \begin{enumerate}
 \item Parse the rules file.
 \item Call the compiler library to parse the contract and compile it to three different stages: the CST, the \verb|Imperative| AST and the \verb|Typed| AST.
-\item Run the pattern-matching and the detection of the dialect of PascaLIGO (if needed) on the CST.
+\item Run the pattern matching and the detection of the dialect of PascaLIGO (if needed) on the CST.
 \item Then run the detection of deprecated variables on the \verb|Imperative| AST.
 \item Finally, run the detection of unused variables on the \verb|Typed| AST.
 \end{enumerate}
@@ -90,7 +90,7 @@ Patterns are a way to capture the shape of a piece of code. They are composed of
 \item Any words.
 \end{itemize}
 
-More precisely, given a pattern $P$ of type $T$ and a ast $A$, the pattern-matching engine will search a node $N$ of $A$ of type $T$ and a substitution $\sigma$ of the variables in $P$ such that $\sigma(P)$ is equal to $N$.
+More precisely, given a pattern $P$ of type $T$ and a ast $A$, the pattern matching engine will search a node $N$ of $A$ of type $T$ and a substitution $\sigma$ of the variables in $P$ such that $\sigma(P)$ is equal to $N$.
 
 The pattern matching algorithm is based on the unparsed patterns of Rinderknecht \& Volanschi\cite{unparsedpatterns}. This induces some unusual characteristics:
 
@@ -100,20 +100,33 @@ The pattern matching algorithm is based on the unparsed patterns of Rinderknecht
 \item Variables can be typed. A typed variable will only match a node of the given type.
 \end{itemize}
 
-The main advantage of this approach is to avoid a (possibly difficult) extension of the syntaxes of LIGO to include holes and code-variables.
+The main advantage of this approach is to avoid a (possibly difficult) extension of the syntaxes of LIGO to include holes and metavariables, that is a variable representing an AST.
 
 \subsubsection{About unparsed patterns}
-The main module is located in \verb|lib/run_pattern.ml| which is a functor taking an unparser (from \verb|lib/unparser/|) and producing the engine. However, most of the work does not depend on any unparser and is made in \verb|lib/pattern.ml|.\\
+The main module is located in \verb|lib/run_pattern.ml| which is a functor taking an unparser (from \verb|lib/unparser/|) and producing the engine. However, most of the work does not depend on any unparser and is located in \verb|lib/pattern.ml|.\\
 The linter ``unparses'' the corresponding CST to a simpler tree and then runs the pattern matching algorithm of Rinderknecht \& Volanschi \cite{unparsedpatterns}.
 Note that this work needed a small modification of the ReasonLIGO CST to include more information, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/785}.
 
+\subsubsection{Example}
+The pattern detecting an useless test in CameLIGO:
+\begin{minted}{ocaml}
+if %_ then %x else %x
+\end{minted}
+
+will match the following expressions
+\begin{minted}{ocaml}
+if true then x else x
+
+if (b || c) then (1 + 2) else (1 + 2)
+\end{minted}
+
 \subsection{PascaLIGO dialects}
-The analysis is located in \verb|lib/pascaligo_flavor.ml| and made on the PascaLIGO CST. It is a fold over the CST, deducting a dialect when possible, and raising an error when two different dialects are detected.\\
-An option was also added in the compiler to choose the dialect when decompiling to PascaLIGO, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/791}.
+The analysis is located in \verb|lib/pascaligo_flavor.ml| and made on the PascaLIGO CST. It is a fold over the CST, deducing a dialect when possible, and raising an error when two different dialects are detected.\\
+An option was also added to the compiler to choose the dialect when decompiling to PascaLIGO, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/791}.
 
 \subsection{Deperacted constants}
 
-The analysis is located in \verb|lib/unused_variables.ml| and made by a traversal of the \verb|Imperative| AST. Indeed, all deprecated constants are marked as such thanks to \url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
+The analysis is located in \verb|lib/unused_variables.ml| and made by a traversal of the \verb|Imperative| AST. Indeed, all deprecated built-ins are marked as such thanks to \url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
 
 \subsection{Unused variables}
 

@@ -18,9 +18,9 @@ An integrated \verb|lint_ligo| could be a serious argument for the adoption of t
 
 \paragraph{A standard set of linting rules}
 
-The linter provides an efficient pattern-matching algorithm but it needs a concrete set of patterns to be useful. Some are available in the \verb|examples/| directory but they are too few. Code patterns should be added to create a concrete standard set of linting rules.
+The linter provides an efficient pattern-matching algorithm but it needs a concrete set of patterns to be useful. Some are available in the \verb|examples/| directory but there are too few. Code patterns should be added to create a concrete standard set of linting rules.
 
-\paragraph{Sementic patterns}
+\paragraph{Semantic patterns}
 Some code patterns target more the code semantics than its exact shape. For example, the 3 definitions of the following \verb|option| function in CameLIGO:
 \begin{minted}{ocaml}
 let option (default : int) (x : int option) : int =
@@ -35,14 +35,14 @@ let option (default : int) (x : int option) : int =
 
 let option (default : int) (x : int option) : int =
   match x with
-    None -> default
+    None -> default (* Note the abscence of a leading vertical bar. *)
   | Some x -> x
 \end{minted}
 
-have all the same semantics and should be in some cases matched by the same ``semantic'' pattern.\\
-This is actually not the case as the actual pattern-matching algorithm is based on the CST, the first structure of the compilation pipeline. This structure still contains many textual information mainly irrelevant for a ``semantic'' pattern (like the order of a pattern matching or the leading vertical bar).
+have all the same semantics and should be in some cases matched by the same semantic pattern.
+This is actually not the case as the actual pattern-matching algorithm is based on the CST, the first structure of the compilation pipeline. This structure still contains many textual information mainly irrelevant for a semantic pattern (like the order of a pattern matching or the leading vertical bar).
 
-An improvement could be to normalize the CST by a compilation followed by a decompilation before running the pattern-matching algorithm. Irrelevant information is erased during the first stages of the compilation and the decompilation allows to run the existing algorithm.
+An improvement could be to normalize the CST by a compilation followed by a decompilation before running the pattern-matching algorithm. Irrelevant information is erased during the first stages of the compilation and the decompilation allows us to run the existing algorithm.
 
 \paragraph{A better detection of unused variables}
 
@@ -55,7 +55,7 @@ For example with the program:
 \end{minted}
 Only the variable \verb|y| will be marked as unused because of \verb|x| being used in the definition of \verb|y|.
 
-A possible improvement is to use a refined algorithm ``propagating'' the information: in the previous example, the algorithm should be aware that, as \verb|y| is unused and \verb|x| is only used in its definition, \verb|x| is finally not used.
+A possible improvement is to use a refined algorithm propagating the information: in the previous example, the algorithm should be aware that, as \verb|y| is unused and \verb|x| is only used in its definition, \verb|x| is finally not used.
 
 \paragraph{Detection of unused types}
 
