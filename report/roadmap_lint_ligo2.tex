@@ -2,6 +2,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
+\usepackage{hyperref}
 
 \usepackage{minted}
 \author{Alexandre Moine}
@@ -9,7 +10,7 @@
 \begin{document}
 \maketitle
 
-This document lists several possibilities for the future of \verb|lint_ligo|, a linter for LIGO.
+This document lists several possibilities for the future of \verb|lint_ligo|\footnote{\url{https://github.com/nobrakal/lint_ligo}}, a linter for LIGO\footnote{https://ligolang.org/}.
 
 \paragraph{Integration in integrated development environments}
 A linter is even more useful when integrated into an IDE, as linting errors could be displayed directly to the user.
@@ -17,10 +18,10 @@ An integrated \verb|lint_ligo| could be a serious argument for the adoption of t
 
 \paragraph{A standard set of linting rules}
 
-The linter provides an efficient pattern-matching algorithm but it needs a concrete set of patterns to be useful. Some are available in the \verb|examples/| directory but they are too few, code patterns should be added to create a concrete standard set of linting rules.
+The linter provides an efficient pattern-matching algorithm but it needs a concrete set of patterns to be useful. Some are available in the \verb|examples/| directory but they are too few. Code patterns should be added to create a concrete standard set of linting rules.
 
-\paragraph{Deep patterns}
-Some code patterns target more the code structure than its exact shape, and can be considered as such ``deep''. For example, the 3 definitions of the following \verb|option| function in CameLIGO:
+\paragraph{Sementic patterns}
+Some code patterns target more the code semantics than its exact shape. For example, the 3 definitions of the following \verb|option| function in CameLIGO:
 \begin{minted}{ocaml}
 let option (default : int) (x : int option) : int =
   match x with
@@ -38,14 +39,14 @@ let option (default : int) (x : int option) : int =
   | Some x -> x
 \end{minted}
 
-are all equivalent and should be in some cases matched by the same pattern.\\
-This is actually not the case as the actual pattern-matching algorithm is based on the CST, the first structure of the compilation pipeline. This structure still contains many textual information mainly irrelevant for a ``deep'' pattern (like the order of a pattern matching or the leading vertical bar).
+have all the same semantics and should be in some cases matched by the same ``semantic'' pattern.\\
+This is actually not the case as the actual pattern-matching algorithm is based on the CST, the first structure of the compilation pipeline. This structure still contains many textual information mainly irrelevant for a ``semantic'' pattern (like the order of a pattern matching or the leading vertical bar).
 
-An improvement could be to normalize the CST by a compilation followed by a decompilation before running the algorithm. Irrelevant information is erased during the first stages of the compilation and the decompilation allows to run the existing pattern-matching algorithm.
+An improvement could be to normalize the CST by a compilation followed by a decompilation before running the pattern-matching algorithm. Irrelevant information is erased during the first stages of the compilation and the decompilation allows to run the existing algorithm.
 
-\paragraph{A stronger detection of unused variables}
+\paragraph{A better detection of unused variables}
 
-The actual algorithm used for detecting unused variables returns an under-approximation of the full set of unused variables. It only detects for each variable if it is being used, but does not propagate the information.\\
+The actual algorithm used for detecting unused variables returns an under-approximation of the full set of unused variables. Indeed, it only detects if each variable is being used, but does not propagate the information.\\
 For example with the program:
 \begin{minted}{ocaml}
   let x = 42 in
@@ -58,7 +59,7 @@ A possible improvement is to use a refined algorithm ``propagating'' the informa
 
 \paragraph{Detection of unused types}
 
-For now, the unused variables algorithm ignores types. It could be interesting to verify if locally defined types are actually used in the code.
+For now, the unused variables algorithm ignores types definition. It could be interesting to verify if locally defined types are actually used in the code.
 
 \end{document}
 %%% Local Variables:
