@@ -1,6 +1,6 @@
 type 'a t =
-  | Ast_lex of string
-  | Ast_node of Simple_utils.Region.t * 'a * 'a t list
+  | Ast_lex of string (* a leaf *)
+  | Ast_node of Simple_utils.Region.t * 'a * 'a t list (* a located-annoted node *)
 
 let thunked_fold_ast lex node x =
   let rec aux = function
@@ -23,7 +23,7 @@ let eq_ast x y =
     | _ -> false
   in
   try aux x y
-  with Invalid_argument _ -> false
+  with Invalid_argument _ -> false (* May be raised by List.for_all2 *)
 
 let map_node f x =
   let rec aux = function
