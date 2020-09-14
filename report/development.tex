@@ -12,7 +12,7 @@
 
 \begin{document}
 \maketitle
-\abstract{The Tezos Foundation has provided support to the development of a linter for LIGO during August and September 2020. This document describes the main aspects of this development.}
+\abstract{The Tezos Foundation has provided support for the development of a linter for LIGO during August and September 2020. This document describes the main aspects of this development.}
 
 \section{Executive summary}
 
@@ -26,9 +26,9 @@ The developement led to a first publicly available version downloadable from:
 \verb|lint_ligo| is a command-line tool and a library which includes the following built-in features:
 
 \begin{itemize}
-\item The detection of deprecated constants.
+\item The detection of deprecated predefined types and values.
 \item The detection of unused variables.
-\item The detection of user-defined patterns.
+\item The detection of code smells.
 \item In the case of a PascaLIGO file, the detection of the used dialect, and if it is mixed with the other dialect.
 \end{itemize}
 
@@ -39,9 +39,9 @@ The linter is \textbf{extensible}. There are two ways for users to include new l
 \item Custom deprecated name. When such a name is detected in the analyzed file, a custom message is printed to the user.
 \end{itemize}
 
-\paragraph{Desing and implementation}
+\paragraph{Design and implementation}
 
-The architecture of the linter is modulable: any new feature can be easily added to the linting chain as each feature is isolated from the others.\\
+The architecture of the linter is modular: any new feature can be easily added to the linting chain as each pass is isolated from the others.\\
 The tool code base is also relatively small because the source code reuses many features offered by the LIGO compiler library.
 
 \paragraph{Community driven}
