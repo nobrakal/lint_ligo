@@ -5,14 +5,17 @@ A linter for the [LIGO](https://ligolang.org/) language.
 ## Build
 
 `lint_ligo` uses [dune](https://github.com/ocaml/dune) as a build system.
-To build the executable, just run `dune build bin/main.exe` (or `opam install .`).
+To build the executable, just run `dune build bin/main.exe`.
+To install it, run `opam install .`.
+
+Note that the compilation requires for now to be synchronized with the LIGO `dev` branch (the linter will compile from commit `f0c15a1b35f1e50312accabc62904d29f43cca05`).
 
 ## Features
 
 The linter is fully configurable and will:
 
 * Detect unused variables.
-* Detect the use of deprecated functions, and allow the user to add their proper deprecations.
+* Detect the use of deprecated functions (from the LIGO standard library), and allow the user to add their proper deprecations.
 * Pattern-match the code against user-defined patterns to detect the use of bad programming patterns.
 * In case of a PascaLIGO file, detect the dialect and show a warning if it uses mixed dialects.
 
@@ -51,13 +54,13 @@ See more examples in the `examples` folder.
 The command
 
 ```
-lint_ligo -r file.rules file.mligo entrypoint
+lint_ligo -s syntax -r file.rules file.ligo entrypoint
 ```
 
-will lint `file.mligo` (with entry point `entrypoint`) using the rules in `file.rules`.
+will lint `file.ligo` (written in `syntax` with entry point `entrypoint`) using the rules in `file.rules`.
 
-Note that you can call the linter without a rules file. In this case, only deprecated constants
-and unused variables will be detected.
+* If no syntax is specified, the syntax will be inferred.
+* If no rules are specified, only deprecated constants and unused variables will be detected.
 
 ## Rules syntax
 
@@ -75,7 +78,7 @@ A rules file contains a language and a list of rules. The file must follow the f
 
 <rule> ::=
   | pattern <type> %{ <pattern> %} message "<text>"
-  | depreciate <string> in <string> opt(replacement <string>) opt(message <string>)
+  | deprecate <string> in <string> opt(replacement <string>) opt(message <string>)
 
 <type> ::= expr | type | keyword | (* under development *)
 
@@ -87,9 +90,10 @@ A rules file contains a language and a list of rules. The file must follow the f
   | %( <pattern> %)      (* a pattern in a sub-tree *)
   | <word>               (* Any word *)
 ```
-### Depreciation
+### Deprecation
 
-You can mark a function name as depreciated. It must be followed by a version tag and may be followed by a suggested replacement and/or a custom message.
+You can mark a function name as deprecated. It must be followed by a version tag and may be followed by a suggested replacement and/or a custom message.
+The engine will search for a free variable with the given name, and print a message if found.
 
 ### Patterns
 

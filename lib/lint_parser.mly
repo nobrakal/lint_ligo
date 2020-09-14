@@ -10,7 +10,7 @@
 %token EOF
 
 (* For rules *)
-%token DEPRECIATE IN REPLACEMENT MESSAGE
+%token DEPRECATE IN REPLACEMENT MESSAGE
 %token PATTERN
 
 %token LANGUAGE
@@ -34,7 +34,7 @@ rules:
 | LANGUAGE plang=String prules=list(rule) EOF { {plang;prules} }
 
 rule:
-| DEPRECIATE dep=String IN dep_version=String dep_replacement=option(replacement) dep_message=option(message)
+| DEPRECATE dep=String IN dep_version=String dep_replacement=option(replacement) dep_message=option(message)
   { Depreciate {dep; dep_version; dep_replacement; dep_message} }
 | PATTERN pat_type=String pat=FullyEscapedString MESSAGE pat_message=String
   { Pattern {pat;pat_type;pat_message} }

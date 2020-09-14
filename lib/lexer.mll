@@ -51,7 +51,7 @@ rule token = parse
   | blank+   { token lexbuf }
   | eof      { EOF }
 
-  | "depreciate" { DEPRECIATE }
+  | "deprecate" { DEPRECATE }
   | "replacement" { REPLACEMENT }
   | "message" { MESSAGE }
   | "in" { IN }
