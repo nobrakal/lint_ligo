@@ -18,7 +18,7 @@ The linter is fully configurable and will:
 * Detect unused variables.
 * Detect the use of deprecated functions (from the LIGO standard library), and allow the user to add their proper deprecations.
 * Pattern-match the code against user-defined patterns to detect the use of bad programming patterns.
-* In case of a PascaLIGO file, detect the dialect and show a warning if it uses mixed dialects.
+* In the case of a PascaLIGO file, detect the dialect and show a warning if it uses mixed dialects.
 
 ### Example
 
