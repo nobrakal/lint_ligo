@@ -84,6 +84,7 @@ let mat ?(debug=false) eq_ast p f =
 let get_some xs =
   List.fold_left (fun acc x -> match acc with Some _ -> acc | None -> x) None xs
 
+(* We run the pattern-matching algorithm on each node with the right type. *)
 let pat_match ?(debug=false) pat typ ast =
   print_if debug
     ("PAT: " ^ string_of_pattern pat);
