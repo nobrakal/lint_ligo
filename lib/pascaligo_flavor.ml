@@ -1,6 +1,10 @@
 open Pascaligo.CST
 open Simple_utils.Region
 
+(* We try to infer the flavor, and fails if
+   we infer two different flavors.
+*)
+
 type flavor = Terse | Verbose
 
 let string_of_flavor = function
@@ -144,7 +148,7 @@ and check_record region flavor x =
 
 and check_case_expr :
       'a. region -> (flavor option -> 'a -> flavor option) -> flavor option -> ('a case) -> flavor option =
-  fun region f flavor {expr; enclosing; cases; lead_vbar; _} -> (* TODO LEADVBAR *)
+  fun region f flavor {expr; enclosing; cases; lead_vbar; _} ->
   let flavor = check_expr flavor expr in
   let flavor = flavor_enclosing flavor enclosing in
   let flavor = favor_lead region flavor lead_vbar in
@@ -245,7 +249,7 @@ and check_attr_decl flavor x =
   check_ne_injection x.region flavor (fun flavor _ -> flavor) x.value
 
 and check_statement flavor = function
-  | Attr x -> (* TODO *)
+  | Attr x ->
      check_attr_decl flavor x
   | Instr x ->
      check_instr flavor x
@@ -445,7 +449,6 @@ let run ?flavor xs =
     None
   with
   | WrongFlavor x -> Some x
-
 
 let format res =
   match res with

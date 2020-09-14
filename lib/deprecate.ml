@@ -1,6 +1,10 @@
 open Ast_imperative
 
-let rec dep_expr acc  x =
+(* This is just a traversal of Ast_imperative to catch
+   the deprecated constants.
+*)
+
+let rec dep_expr acc x =
   match x.expression_content with
   | E_literal _ | E_variable _ | E_skip ->
      acc
@@ -75,4 +79,5 @@ let dep_decl acc x =
 let run xs =
   List.fold_left dep_decl [] xs
 
-let format xs = List.map (fun (x,n) -> x, "Deprecated function " ^ n ^ ".") xs
+let format xs =
+  List.map (fun (x,n) -> x, "Deprecated function " ^ n ^ ".") xs

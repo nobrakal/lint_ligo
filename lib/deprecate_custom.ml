@@ -1,6 +1,10 @@
 open Rules
 open Utils
 
+(* This is a traversal of the Typed AST, looking
+   for a mentionned free variables.
+*)
+
 (* Create the message for a depreciated function *)
 let make_dep_msg dep (dep_version, dep_replacement, dep_message) =
   let with_default f = Option.fold ~none:"" ~some:f in

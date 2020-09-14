@@ -3,6 +3,10 @@ open Rules
 
 open Utils
 
+(* This is just a functor to get a pattern-matching function from
+   an unparser.
+*)
+
 module Make(U:Unparse.Unparser)= struct
 
   exception Bad_node of string

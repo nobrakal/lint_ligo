@@ -1,5 +1,10 @@
 open Unparser.Ast
 
+(* This pattern matching algorithm is based on:
+   Rinderknecht, Christian & Volanschi, Nic. (2010).
+   Theory and practice of unparsed patterns for metacompilation. Science of Computer Programming. 75. 85-105.
+*)
+
 type 'a pattern =
   | Pat_lex of string
   | Pat_pat of 'a pattern list

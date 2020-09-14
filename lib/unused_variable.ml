@@ -3,6 +3,13 @@ open Simple_utils
 
 open Ast_typed
 
+(* We go through the Typed AST and maintain a map
+   from variables to a boolean indicating if the variable
+   was used.
+   To deal with name capture, a list of known unused variables is
+   also maintained.
+*)
+
 module V = struct
 
   type t = expression_variable
