@@ -7,9 +7,9 @@ A linter for the [LIGO](https://ligolang.org/) language.
 `lint_ligo` uses [dune](https://github.com/ocaml/dune) as a build system.
 To build the executable, just run `dune build bin/main.exe`.
 
-To install it, run `opam install .`.
+To install it, run `opam install .`
 
-Note that the compilation requires for now to be synchronized with the LIGO `dev` branch (the linter will compile from commit `f0c15a1b35f1e50312accabc62904d29f43cca05`).
+Note that the compilation requires for now to have LIGO from the `dev` branch (the linter will compile from commit `f0c15a1b35f1e50312accabc62904d29f43cca05`).
 
 ## Features
 
