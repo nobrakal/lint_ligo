@@ -11,8 +11,12 @@ module Pat_pascaligo  = Run_pattern.Make(Unparser.Unparser_pascaligo)
 module Pat_reasonligo = Run_pattern.Make(Unparser.Unparser_reasonligo)
 
 let parse_rules rules =
-  let buf = Lexing.from_channel (open_in rules) in
-  try Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf
+  let inchan = open_in rules in
+  let buf = Lexing.from_channel inchan in
+  try
+    let result = Rules.rules_of_parsed @@ Lint_parser.rules Lexer.token buf in
+    close_in inchan;
+    result
   with Lint_parser.Error -> Error Errors.RulesParsing
 
 let run_deprecate program =
