@@ -42,9 +42,9 @@ let main (action, store : int * int) =
 the linter will print:
 
 ```
-in file "test.mligo", line 1, characters 23-30:
+Linter error in file "test.mligo", line 1, characters 23-30:
 Unused variable y.
-in file "test.mligo", line 2, characters 2-20:
+Linter error in file "test.mligo", line 2, characters 2-20:
 Useless test.
 ```
 
