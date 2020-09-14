@@ -31,7 +31,7 @@ module SMap = Map.Make(String)
 let print_if b x =
   if b then print_endline x
 
-  let add ~debug eq_ast m k v =
+let add ~debug eq_ast m k v =
   match SMap.find_opt k m with
   | None ->
      SMap.add k v m
