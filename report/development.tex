@@ -1,5 +1,6 @@
 \documentclass[10pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
+\usepackage{fullpage}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
 \usepackage{hyperref}
@@ -12,7 +13,12 @@
 
 \begin{document}
 \maketitle
-\abstract{The Tezos Foundation has provided support for the development of a linter for LIGO during August and September 2020. This document describes the main aspects of this development.}
+
+\begin{abstract}
+  The Tezos Foundation has provided support for the
+  development of a linter for LIGO during August and September
+  2020. This document describes the main aspects of this development.
+\end{abstract}
 
 \section{Executive summary}
 
@@ -21,54 +27,119 @@ The developement led to a first publicly available version downloadable from:
   \url{https://github.com/nobrakal/lint\_ligo}
 \end{center}
 
+% FIXME: Would it be possible to distribute this tool using OPAM?
+
 \paragraph{Features}
 
-\verb|lint_ligo| is a command-line tool and a library which includes the following built-in features:
+\verb|lint_ligo| is a command-line tool and a library which detect
+the following source of potential issues in LIGO source code:
 
 \begin{itemize}
-\item The detection of deprecated predefined types and values.
-\item The detection of unused variables.
-\item The detection of code smells.
-\item In the case of a PascaLIGO file, the detection of the used dialect, and if it is mixed with the other dialect.
+\item deprecated predefined types and values ;
+\item unused variables ;
+\item code smells ;
+\item and, in the case of a PascaLIGO file, if there is mixed usage of the two dialects.
 \end{itemize}
 
-The linter is \textbf{extensible}. There are two ways for users to include new linting rules:
+In addition to these predefined linting rules, \verb!lint_ligo! is
+also \textbf{extensible}. There are two ways for users to include new
+linting rules.
 
 \begin{itemize}
-\item Code patterns. When detected in the analyzed file, a custom message is printed to the user.
-\item Custom deprecated name. When such a name is detected in the analyzed file, a custom message is printed to the user.
+\item
+  By declaring a problematic code patterns. When a user-defined code pattern is detected in
+  the analyzed file, a custom message is printed to the user.
+
+\item
+  By declaring a deprecated name. When such a name is detected
+  in the analyzed file, a custom message is printed to the user.
 \end{itemize}
+
+% FIXME: Il manque une description un peu plus précise de l'endroit où
+% on écrit ces règles. Ou bien alors, il faut rajouter un
+% pointeur vers la documentation utilisateur de l'outil.
 
 \paragraph{Design and implementation}
 
-The architecture of the linter is modular: any new feature can be easily added to the linting chain as each pass is isolated from the others.\\
-The tool code base is also relatively small because the source code reuses many features offered by the LIGO compiler library.
+The architecture of the linter is modular: any new feature can be
+easily added to the linting chain as each pass is isolated from the
+others.
+% FIXME: Cette affirmation n'est pas facile à comprendre... ou à croire!
+% En effet, tu n'as pas défini ce qu'est une passe, quelles sont
+% les passes présentent dans l'outil et comment elles s'articulent.
+% Aussi, il doit bien exister certaines fonctionnalités que l'on ne
+% peut pas implémenter. Il faut rester humble et dire que l'on a essayé
+% de rendre l'architecture la plus modulaire possible pour favoriser
+% l'extension du logiciel.
+
+The tool code base is also relatively small because the source code
+reuses many features offered by the LIGO compiler library.
+
+% FIXME: Donne le nombre de lignes de code. Explicite aussi les fonctionnalités
+% utilisées dans le compilateur LIGO.
 
 \paragraph{Community driven}
-The author collaborates with the LIGO team to design the linter.\\
-The original proposal mentioned the introduction of a hook for a linter in the compiler. After a proof of concept was developed, the LIGO team rejected the idea as it introduced unneeded complexity for the end-user.\\
-Moreover, the idea of detecting PascaLIGO dialects came from a member of the LIGO team as a valuable addition.\\
 
-The author also collaborates with the community to understand the kind of linting rules that are the most relevant. A member of the community suggested the idea of detecting unused variables which, after a discussion with the LIGO team, led to an integration of this feature in the linter.
+The author collaborates with the LIGO team to design the linter.
+
+The original proposal mentioned the introduction of a hook for a
+linter in the compiler. After a proof-of-concept was developed, the
+LIGO team rejected the idea as it introduced unneeded complexity for
+the end-user.
+
+Moreover, the idea of detecting PascaLIGO dialects came from a member
+of the LIGO team as a valuable addition.
+
+The author also collaborates with the community to understand the kind
+of linting rules that are the most relevant. A member of the community
+suggested the idea of detecting unused variables which, after a
+discussion with the LIGO team, led to an integration of this feature
+in the linter.
 
 \paragraph{Next steps}
 
 \verb|lint_ligo| can be used by the LIGO community right now.
-However, some work can be done to improve the usability of the tool: there is a need for a standard set of linting rules for each LIGO language and the pattern matching can be improved.
-Furthermore, it could be interesting to extend the detection of unused variables to catch more cases.
+However, some work can be done to improve the usability of the tool:
+there is a need for a standard set of linting rules for each LIGO
+language and the pattern matching can be improved. Furthermore, it
+could be interesting to extend the detection of unused variables to
+catch more cases.
+
+% FIXME: Sur ce dernier point, il faut expliciter quelles sont les
+% limitations exactes de l'outil.
 
 \section{Details about the design and the implementation of lint-ligo}
 
 \subsection{Structure of the project}
 
-The client only offers a way to call the library.\\
-The entry point of the library is \verb|lib/main.ml|. Its \verb|main| function will, given a rules file, a contract and an entry point for the contract:
+The client only offers a way to call the library.
+
+The entry point of the library is \verb|lib/main.ml|. Its \verb|main|
+function will, given a rules file, a contract and an entry point for
+the contract:
+
 \begin{enumerate}
-\item Parse the rules file.
-\item Call the compiler library to parse the contract and compile it to three different stages: the CST, the \verb|Imperative| AST and the \verb|Typed| AST.
-\item Run the pattern matching and the detection of the dialect of PascaLIGO (if needed) on the CST.
-\item Then run the detection of deprecated variables on the \verb|Imperative| AST.
-\item Finally, run the detection of unused variables on the \verb|Typed| AST.
+\item
+  Parse the rules file.
+% FIXME: où le trouve-t-on?
+
+\item
+  Call the compiler library to parse the contract and compile it into
+  three different targets:
+  the concrete syntax tree (CST),
+  the \verb|Imperative| abstract syntax tree (AST),
+  and the \verb|Typed| abstract syntax tree (AST).
+
+\item
+  Run the pattern-matching and the detection of the dialect of
+  PascaLIGO (if needed) on the CST.
+
+\item
+  Run the detection of deprecated variables on the
+  \verb|Imperative| AST.
+
+\item
+  Run the detection of unused variables on the \verb|Typed| AST.
 \end{enumerate}
 
 Each pass is controlled by a module of the following signature:
@@ -78,37 +149,85 @@ Each pass is controlled by a module of the following signature:
   val format : result -> (Location.t * string) list
 \end{minted}
 
-where the formatting function allows to get a list of located warnings, which can be printed at the end to the user.
+where the formatting function allows to get a list of located
+warnings, which can be printed at the end to the user.
 
 \subsection{Patterns}
-Patterns are a way to capture the shape of a piece of code. They are composed of:
+Patterns are a way to capture the shape of a piece of code. They are
+composed of:
 
 \begin{itemize}
-\item Pattern variables (identifiers preceded by \verb|%|). Note that a "hole" variable representing an always fresh variable is available using \verb|%_|.
-\item To have better control over variables, they can be typed to match only a kind of node in the AST using the syntax \verb|%x:type|. Types depend on the targetted LIGO language.
-\item Meta parentheses \verb|%(| \verb|%)|: parentheses not included in the targeted code but useful to indicate the shape of the AST.
-\item Any words.
+\item
+  Pattern variables (identifiers preceded by \verb|%|). Note that a
+  "hole" variable representing an always fresh variable is available
+  using \verb|%_|.
+
+\item
+  To have better control over variables, they can be typed to match
+  only a kind of node in the AST using the syntax
+  \verb|%x:type|. Types depend on the target LIGO language.
+
+\item
+  Meta parentheses \verb|%(| \verb|%)|: parentheses not included in
+  the target code but useful to indicate the shape of the AST.
+
+\item
+  Any words.
 \end{itemize}
 
-More precisely, given a pattern $P$ of type $T$ and a ast $A$, the pattern matching engine will search a node $N$ of $A$ of type $T$ and a substitution $\sigma$ of the variables in $P$ such that $\sigma(P)$ is equal to $N$.
+% FIXME: A BNF grammar would be easier to understand IMHO.
 
-The pattern matching algorithm is based on the unparsed patterns of Rinderknecht \& Volanschi\cite{unparsedpatterns}. This induces some unusual characteristics:
+More precisely, given a pattern $P$ of type $T$, and an AST $A$, the
+pattern-matching engine will search a node $N$ of $A$ of type $T$ and
+a substitution $\sigma$ of the variables in $P$ such that $\sigma(P)$
+is equal to $N$.
 
+The pattern-matching algorithm is based on the unparsed patterns of
+Rinderknecht \& Volanschi\cite{unparsedpatterns}.
+% FIXME: En ce point, il faut expliquer ce que sont ces unparsed
+% patterns et quel(s) problème(s), ils cherchent à résoudre...
+
+This induces some unusual characteristics:
+% FIXME: "Characteristics" of what?
 \begin{itemize}
-\item Patterns are \emph{not} parsed, thus they can correspond to invalid LIGO code, and no warning will be issued. Such patterns will simply not match anything.
-\item Patterns are not linear, meaning that a variable can appear more than once in a pattern.
-\item Variables can be typed. A typed variable will only match a node of the given type.
+\item
+  Patterns are \emph{not} parsed, thus they can correspond to invalid
+  LIGO code, and no warning will be issued. Such patterns will simply
+  not match anything.
+
+\item
+  Patterns are not linear, meaning that a variable can appear more
+  than once in a pattern.
+
+\item
+  Variables can be typed. A typed variable will only match a node of
+  the given type.
 \end{itemize}
 
-The main advantage of this approach is to avoid a (possibly difficult) extension of the syntaxes of LIGO to include holes and metavariables, that is a variable representing an AST.
+The main advantage of this approach is to avoid a (possibly difficult)
+extension of the syntaxes of LIGO to include holes and metavariables,
+that is a variable representing an AST.
+% FIXME: Des explications supplémentaires me semblent nécessaires.
+% Je ne vois pas très bien comment ton lecteur pourrait comprendre
+% ce que tu veux dire ici.
 
 \subsubsection{About unparsed patterns}
-The main module is located in \verb|lib/run_pattern.ml| which is a functor taking an unparser (from \verb|lib/unparser/|) and producing the engine. However, most of the work does not depend on any unparser and is located in \verb|lib/pattern.ml|.\\
-The linter ``unparses'' the corresponding CST to a simpler tree and then runs the pattern matching algorithm of Rinderknecht \& Volanschi \cite{unparsedpatterns}.
-Note that this work needed a small modification of the ReasonLIGO CST to include more information, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/785}.
+
+The main module is located in \verb|lib/run_pattern.ml| which is a
+functor taking an unparser (from \verb|lib/unparser/|) and producing
+the engine. However, most of the work does not depend on any unparser
+and is located in \verb|lib/pattern.ml|.
+
+The linter ``unparses'' the corresponding CST to a simpler tree and
+then runs the pattern-matching algorithm of Rinderknecht \& Volanschi
+\cite{unparsedpatterns}.
+
+Note that this work has needed a small modification of the ReasonLIGO
+CST to include more information, see
+\url{https://gitlab.com/ligolang/ligo/-/merge_requests/785}.
 
 \subsubsection{Example}
-The pattern detecting an useless test in CameLIGO:
+The pattern detecting a useless test in CameLIGO:
 \begin{minted}{ocaml}
 if %_ then %x else %x
 \end{minted}
@@ -120,26 +239,50 @@ if true then x else x
 if (b || c) then (1 + 2) else (1 + 2)
 \end{minted}
 
+% FIXME: Est-ce que cet exemple illustre toutes les constructions du langage de patterns?
+
 \subsection{PascaLIGO dialects}
-The analysis is located in \verb|lib/pascaligo_flavor.ml| and made on the PascaLIGO CST. It is a fold over the CST, deducing a dialect when possible, and raising an error when two different dialects are detected.\\
-An option was also added to the compiler to choose the dialect when decompiling to PascaLIGO, see \url{https://gitlab.com/ligolang/ligo/-/merge_requests/791}.
+The analysis is located in \verb|lib/pascaligo_flavor.ml| and made on
+the PascaLIGO CST. It is a fold over the CST, deducing a dialect when
+possible, and raising an error when two different dialects are
+detected.
+% FIXME: Comment fonctionne cette détection?
 
-\subsection{Deperacted constants}
+An option was also be added to the compiler to choose the dialect when
+decompiling to PascaLIGO, see
+\url{https://gitlab.com/ligolang/ligo/-/merge_requests/791}.
 
-The analysis is located in \verb|lib/unused_variables.ml| and made by a traversal of the \verb|Imperative| AST. Indeed, all deprecated built-ins are marked as such thanks to \url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
+\subsection{Deprecated constants}
+
+The analysis is located in \verb|lib/unused_variables.ml| and made by
+a traversal of the \verb|Imperative| AST. Indeed, all deprecated
+built-ins are marked as such thanks to
+\url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
+
+% FIXME: Comment ça marche?
 
 \subsection{Unused variables}
 
-The analysis is located in \verb|lib/deprecate.ml| and made on the \verb|Typed| AST because the structure is much simpler to analyze than structures from earlier passes. The AST is folded to a map linking each variable to a boolean indicating if it was used in the code or not (note that efforts were made to save this information in case of a name capture).
-This analysis mimics the one made the OCaml compiler: variables with a name starting by an underscore are not analyzed.\\
-Moreover, it returns an under-approximation of the whole set of unused variables.
-For example with the program:
+The analysis is located in \verb|lib/deprecate.ml| and made on the
+\verb|Typed| AST because the structure is much simpler to analyze than
+structures from earlier passes. The AST is folded to a map linking
+each variable to a boolean indicating if it was used in the code or
+not (note that efforts were made to properly maintain this information
+in case of a name capture).
+
+This analysis mimicks the one made by the OCaml compiler: variables
+with a name starting by an underscore are ignored by the analysis.
+
+Be aware that the analysis returns an under-approximation of the whole
+set of unused variables.  For example with the program:
 \begin{minted}{ocaml}
   let x = 42 in
   let y = x  in
   ()
 \end{minted}
-Only the variable \verb|y| will be marked as unused because of \verb|x| being used in the definition of \verb|y|.
+
+Only the variable \verb|y| will be marked as unused because
+\verb|x| is used in the definition of \verb|y|.
 
 \bibliographystyle{plain}
 \bibliography{publications}{}
