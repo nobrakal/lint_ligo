@@ -27,8 +27,6 @@ The development led to a first publicly available version downloadable from:
   \url{https://github.com/nobrakal/lint\_ligo}
 \end{center}
 
-% FIXME: Would it be possible to distribute this tool using OPAM?
-
 \paragraph{Features}
 
 \verb|lint_ligo| is a command-line tool and a library which detect
@@ -55,28 +53,18 @@ linting rules.
   in the analyzed file, a custom message is printed to the user.
 \end{itemize}
 
-% FIXME: Il manque une description un peu plus précise de l'endroit où
-% on écrit ces règles. Ou bien alors, il faut rajouter un
-% pointeur vers la documentation utilisateur de l'outil.
+These rules are specified in a configuration file, which is an optional argument
+of the binary of the linter.
 
 \paragraph{Design and implementation}
 
-The architecture of the linter is modular: any new feature can be
-easily added to the linting chain as each pass is isolated from the
-others.
-% FIXME: Cette affirmation n'est pas facile à comprendre... ou à croire!
-% En effet, tu n'as pas défini ce qu'est une passe, quelles sont
-% les passes présentent dans l'outil et comment elles s'articulent.
-% Aussi, il doit bien exister certaines fonctionnalités que l'on ne
-% peut pas implémenter. Il faut rester humble et dire que l'on a essayé
-% de rendre l'architecture la plus modulaire possible pour favoriser
-% l'extension du logiciel.
+The linter was developed to be extensible: each analysis is separated from the others
+and chained at the end. Hence, adding a new analysis need only small modifications of
+the actual codebase.
 
-The tool code base is also relatively small because the source code
-reuses many features offered by the LIGO compiler library.
-
-% FIXME: Donne le nombre de lignes de code. Explicite aussi les fonctionnalités
-% utilisées dans le compilateur LIGO.
+The tool code base is also relatively small (approximately 3000 lines) because the source code
+reuses many features offered by the LIGO compiler library: the parsing of LIGO files, the different
+compilation passes and tools to manage variable names and code locations.
 
 \paragraph{Community driven}
 
@@ -240,13 +228,19 @@ if (b || c) then (1 + 2) else (1 + 2)
 \end{minted}
 
 % FIXME: Est-ce que cet exemple illustre toutes les constructions du langage de patterns?
+% FIXME: NON, mais il faut étendre le système de type du linter pour avoir de bons exemples.
 
 \subsection{PascaLIGO dialects}
 The analysis is located in \verb|lib/pascaligo_flavor.ml| and made on
 the PascaLIGO CST. It is a fold over the CST, deducing a dialect when
 possible, and raising an error when two different dialects are
 detected.
-% FIXME: Comment fonctionne cette détection?
+
+Indeed, each flavor corresponds to a set of syntactic particularities.
+When detecting such a particularity, the linter searches if it has already
+inferred a flavor. If not, it stores the corresponding flavor. Else, it
+compares the stored flavor with the new one and raises an error if they
+are distinct.
 
 An option was also be added to the compiler to choose the dialect when
 decompiling to PascaLIGO, see
@@ -258,8 +252,8 @@ The analysis is located in \verb|lib/unused_variables.ml| and made by
 a traversal of the \verb|Imperative| AST. Indeed, all deprecated
 built-ins are marked as such thanks to
 \url{https://gitlab.com/ligolang/ligo/-/merge_requests/782}.
-
-% FIXME: Comment ça marche?
+Indeed, the LIGO compiler marks deprecated built-ins as such in the
+\verb|Imperative| AST.
 
 \subsection{Unused variables}
 
