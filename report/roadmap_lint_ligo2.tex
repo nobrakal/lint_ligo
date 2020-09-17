@@ -22,8 +22,8 @@ errors could be displayed directly to the user.
 %
 An integrated \verb|lint_ligo| could be a serious argument for the
 adoption of the linter by the community.
-
-% FIXME: How would you do that? By implementing an LSP server?
+This can be achieved in a standard way by implementing a Language
+Server Protocol\footnote{\url{https://microsoft.github.io/language-server-protocol/}}.
 
 \paragraph{A standard set of linting rules}
 
@@ -56,7 +56,7 @@ let option (default : int) (x : int option) : int =
 \end{minted}
 
 have the exact same semantics and should be matched by the same
-semantic pattern if needed.  This is not what happens in the current
+semantic pattern if needed. This is not what happens in the current
 implementation since the actual pattern-matching algorithm is based on
 the CST, the first structure of the compilation pipeline. This
 structure still contains many textual information irrelevant for a
