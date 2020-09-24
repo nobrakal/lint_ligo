@@ -69,6 +69,17 @@ algorithm. Irrelevant information is erased during the first stages of
 the compilation and the decompilation allows us to run the existing
 algorithm.
 
+\paragraph{Refinement of types in patterns}
+
+Variables in patterns can be typed to match only some trees (for
+example, \verb|%x:expr| will only match an expression).
+It would be a useful addition to use more precise types. For example,
+with a type \verb|constant|, we will be able to write:
+\begin{minted}{ocaml}
+  if %_:constant then %_ else %_
+\end{minted}
+to detect a boolean analysis on a constant boolean.
+
 \paragraph{A better detection of unused variables}
 
 The current algorithm used for detecting unused variables returns an
