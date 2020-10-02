@@ -92,9 +92,13 @@ let parse_file syntax file =
   Ok (imperative,cst)
 
 let compile_to_typed entry_point imperative =
-  let%bind sugar   = from_compiler_result @@ Compile.Of_imperative.compile imperative in
-  let%bind core    = from_compiler_result @@ Compile.Of_sugar.compile sugar in
-  let%bind typed,_ = from_compiler_result @@ Compile.Of_core.(compile (Contract entry_point) core) in
+  let%bind sugar     =
+    from_compiler_result @@ Compile.Of_imperative.compile imperative in
+  let%bind core      =
+    from_compiler_result @@ Compile.Of_sugar.compile sugar in
+  let%bind typed,_,_ =
+    from_compiler_result @@
+      Compile.Of_core.(compile (Contract entry_point) core) in
   Ok typed
 
 let string_of_result (loc,x) =

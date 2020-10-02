@@ -79,7 +79,7 @@ let rec check_type_expr flavor = function
   | TProd   x ->
      List.fold_left check_type_expr flavor (Utils.nsepseq_to_list x.value)
   | TSum    x ->
-     List.fold_left check_tvariant flavor (Utils.nsepseq_to_list x.value)
+     check_tsum flavor x.region x.value
   | TRecord x ->
      check_trecord flavor x
   | TApp    {value=(_,x);_} ->
@@ -88,6 +88,10 @@ let rec check_type_expr flavor = function
      check_type_expr (check_type_expr flavor l)  r
   | TPar    x ->
      check_type_expr flavor x.value.inside
+
+and check_tsum flavor region {lead_vbar;variants;_} =
+  let flavor = favor_lead region flavor lead_vbar in
+  List.fold_left check_tvariant flavor (Utils.nsepseq_to_list variants)
 
 and check_tvariant flavor {value;_} =
   check_opt flavor (fun flavor (_,x) -> check_type_expr flavor x) value.arg
@@ -245,12 +249,7 @@ and check_block flavor x =
 and check_statements flavor (x:statements) =
   List.fold_left check_statement flavor (Utils.nsepseq_to_list x)
 
-and check_attr_decl flavor x =
-  check_ne_injection x.region flavor (fun flavor _ -> flavor) x.value
-
 and check_statement flavor = function
-  | Attr x ->
-     check_attr_decl flavor x
   | Instr x ->
      check_instr flavor x
   | Data x ->
@@ -419,22 +418,18 @@ and check_arith_expr flavor = function
   | Neg x ->
      check_unop flavor x.value
 
-and check_constdecl region flavor {const_type; init; terminator; attributes; _} =
+and check_constdecl region flavor {const_type; init; terminator; _} =
   let flavor = check_opt flavor (fun flavor (_,x) -> check_type_expr flavor x) const_type in
-  let flavor = check_opt flavor check_attr_decl attributes in
   let flavor = check_expr flavor init in
   flavor_terminator region flavor terminator
 
-and check_fundecl region flavor {param;ret_type;return; terminator; attributes; _} =
+and check_fundecl region flavor {param;ret_type;return; terminator; _} =
   let flavor = flavor_terminator region flavor terminator in
   let flavor = check_parameters flavor param in
-  let flavor = check_opt flavor check_attr_decl attributes in
   let flavor = check_opt flavor (fun flavor (_,x) -> check_type_expr flavor x) ret_type in
   check_expr flavor return
 
 let check_declaration flavor = function
-  | AttrDecl x ->
-     check_attr_decl flavor x
   | TypeDecl x ->
      check_typedecl flavor x.value
   | ConstDecl x ->

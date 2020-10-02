@@ -306,12 +306,13 @@ and print_injection : 'a. ('a -> ast) -> ('a injection) -> ast list =
      opening :: elements @ opt_to_list (fun x -> [K.semi x]) terminator @ [closing]
 
 and print_ne_injection : 'a. ('a -> ast) -> ('a ne_injection) -> ast list =
-  fun f {compound; ne_elements; terminator} ->
+  fun f {compound; ne_elements; terminator; attributes} ->
   let elements = print_nsepseq K.semi f ne_elements in
   match Option.map get_compund compound with
     None -> elements
   | Some (opening, closing) ->
      opening :: elements @ opt_to_list (fun x -> [K.semi x]) terminator @ [closing]
+     @ print_attributes attributes
 
 and print_field_assign x =
   let {field_name; field_expr; assignment} = x.value in
@@ -433,7 +434,7 @@ and print_type_expr loc x =
   | TProd cartesian ->
      [print_par (print_nsepseq K.times (print_type_expr cartesian.region)) cartesian]
   | TSum sum ->
-     print_nsepseq K.vbar print_variant sum.value
+     print_sum_type sum.value
   | TRecord record ->
      unreg print_fields record
   | TApp app ->
@@ -449,11 +450,17 @@ and print_type_expr loc x =
      [K.wild w]
   in node Type xs loc
 
+and print_sum_type {lead_vbar; variants; attributes} =
+  opt_to_list (fun x -> [K.vbar x]) lead_vbar
+  @ print_nsepseq K.vbar print_variant variants
+  @ print_attributes attributes
+
 and print_fields fields = print_ne_injection print_field_decl fields
 
 and print_field_decl x =
-  let {field_name; colon; field_type} = x.value in
-  let xs = [rlex field_name; K.colon colon; print_type_expr x.region field_type] in
+  let {field_name; colon; field_type; attributes} = x.value in
+  let xs = [rlex field_name; K.colon colon; print_type_expr x.region field_type]
+           @ print_attributes attributes in
   node Field_decl xs x.region
 
 and print_type_app (ctor, tuple) =
@@ -467,12 +474,13 @@ and print_type_tuple x =
   else print_par (fun _ -> [nxs]) x
 
 and print_variant x =
-  let  {constr; arg} = x.value in
+  let  {constr; arg; attributes} = x.value in
   let constr = rlex constr in
   let xs = match arg with
-    | None -> [constr]
+    | None -> constr :: print_attributes attributes
     | Some (kwd_of, e) ->
        [constr; K.kwd_of kwd_of;print_type_expr x.region e]
+       @  print_attributes attributes
   in node Type xs x.region
 
 let print_type_decl x =

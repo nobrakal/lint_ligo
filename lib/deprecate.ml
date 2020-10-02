@@ -64,7 +64,7 @@ and dep_cases acc = function
      dep_expr (dep_expr acc match_nil) x
   | Match_option {match_none;match_some=(_,x)} ->
      dep_expr (dep_expr acc match_none) x
-  | Match_tuple  (_,x) | Match_record (_,x) | Match_variable (_,x) ->
+  | Match_tuple (_,_,x) | Match_record (_,_,x) | Match_variable (_,_,x) ->
      dep_expr acc x
 
 and dep_access acc = function

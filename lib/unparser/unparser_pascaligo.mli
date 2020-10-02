@@ -2,9 +2,10 @@ type cst = Pascaligo.CST.t
 
 type node =
   | Name | Keyword
-  | AttributeDeclaration | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration
+  | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration
   | Par | Brace | Bracket
   | Type | TVariant | TFieldDecl
+  | Attribute
   | Expr
   | Instruction
   | Param

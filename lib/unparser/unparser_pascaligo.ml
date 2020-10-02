@@ -8,9 +8,10 @@ type cst = Pascaligo.CST.t
 
 type node =
   | Name | Keyword
-  | AttributeDeclaration | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration
+  | TypeDeclaration | ConstDeclaration | FunDeclaration | VarDeclaration
   | Par | Brace | Bracket
   | Type | TVariant | TFieldDecl
+  | Attribute
   | Expr
   | Instruction
   | Param
@@ -23,7 +24,6 @@ type node =
 let string_of_node = function
   | Name -> "name"
   | Keyword -> "keyword"
-  | AttributeDeclaration -> "attrdecl"
   | TypeDeclaration -> "typedecl"
   | ConstDeclaration -> "constdecl"
   | FunDeclaration -> "fundecl"
@@ -34,6 +34,7 @@ let string_of_node = function
   | Type -> "type"
   | TVariant -> "tvariant"
   | TFieldDecl -> "tfielddecl"
+  | Attribute -> "attribute"
   | Expr -> "expr"
   | Instruction -> "instruction"
   | Param -> "param"
@@ -49,7 +50,6 @@ let string_of_node = function
 let node_of_string = function
   | "name" -> Some Name
   | "keyword" -> Some Keyword
-  | "attrdecl" -> Some AttributeDeclaration
   | "typedecl" -> Some TypeDeclaration
   | "constdecl" -> Some ConstDeclaration
   | "fundecl" -> Some FunDeclaration
@@ -71,6 +71,7 @@ let node_of_string = function
   | "binding" -> Some Binding
   | "fieldpathassignement" -> Some FieldPathAssignement
   | "fieldassignment" -> Some FieldAssignment
+  | "attributes" -> Some Attribute
   | _ -> None
 
 type ast = node Ast.t
@@ -128,6 +129,7 @@ module K = struct
   let lbracket = kwd "["
   let rbracket = kwd "]"
   let code_inj = kwd "[%"
+  let attribute = kwd "[@"
   let cons     = kwd "#"
   let vbar     = kwd "|"
   let arrow    = kwd "->"
@@ -158,7 +160,6 @@ module K = struct
   let c_None  = kwd "None"
 
   let big_map    = kwd "big_map"
-  let attributes = kwd "attributes"
   let record     = kwd "record"
 end
 
@@ -181,7 +182,6 @@ let print_injection_kwd = function
   | InjList   x -> K.kwd_list x
 
 let print_ne_injection_kwd = function
-  | NEInjAttr   x -> K.attributes x
   | NEInjSet    x -> K.kwd_set x
   | NEInjMap    x -> K.kwd_map x
   | NEInjRecord x -> K.record x
@@ -197,15 +197,18 @@ let print_enclosing = function
 
 let print_terminator =  opt_to_list (fun x -> [K.semi x])
 
+let print_attribute x =
+  node Attribute ([K.attribute x.region; rlex x; K.rbracket x.region]) x.region
+
+let print_attributes xs = List.map print_attribute xs
+
 let print_ne_injection : 'a. ('a -> ast) -> ('a ne_injection) -> ast list =
-  fun f {kind; enclosing; ne_elements; terminator} ->
+  fun f {kind; enclosing; ne_elements; terminator; attributes} ->
   let (opening,closing) = print_enclosing enclosing in
   let elements = print_nsepseq K.semi f ne_elements in
   print_ne_injection_kwd kind
   :: opt_to_list (fun x -> [x]) opening @ elements @ print_terminator terminator @ [closing]
-
-let print_attr_decl xs =
-  node AttributeDeclaration (print_ne_injection rlex xs.value) xs.region
+  @ print_attributes attributes
 
 (* Type *)
 let rec print_type_expr reg x =
@@ -229,8 +232,9 @@ and print_trecord x =
   print_ne_injection print_field_decl x.value
 
 and print_field_decl x =
-  let {field_name; colon; field_type} = x.value in
-  let xs = [rlex field_name; K.colon colon; print_type_expr x.region field_type] in
+  let {field_name; colon; field_type; attributes} = x.value in
+  let xs = [rlex field_name; K.colon colon; print_type_expr x.region field_type]
+           @ print_attributes attributes in
   node TFieldDecl xs x.region
 
 and print_tfun x =
@@ -238,12 +242,17 @@ and print_tfun x =
   [print_type_expr x.region l; K.arrow arrow; print_type_expr x.region r]
 
 and print_tsum x =
-  print_nsepseq K.vbar print_variant x.value
+  let {lead_vbar; variants; attributes} = x.value in
+  opt_to_list (fun x -> [K.vbar x]) lead_vbar
+  @ print_nsepseq K.vbar print_variant variants
+  @ print_attributes attributes
 
 and print_variant x =
-  let {constr;arg} = x.value in
+  let {constr;arg; attributes} = x.value in
   let xs =
-    rlex constr :: opt_to_list (fun (kwd_of,t) -> [K.kwd_of kwd_of; print_type_expr x.region t]) arg in
+    rlex constr :: opt_to_list (fun (kwd_of,t) -> [K.kwd_of kwd_of; print_type_expr x.region t]) arg
+    @ print_attributes attributes
+  in
   node TVariant xs x.region
 
 and print_tprod x =
@@ -505,7 +514,6 @@ and print_data = function
 and print_statement reg = function
   | Instr x -> print_instruction reg x
   | Data  x -> print_data x
-  | Attr  x -> print_attr_decl x
 
 and print_statements reg x =
   print_nsepseq K.semi (print_statement reg) x
@@ -606,7 +614,7 @@ and print_const_decl x =
     :: print_type_opt x.region const_type
     @ [K.equal equal; print_expr x.region init]
     @ print_terminator terminator
-    @ opt_to_list (fun x -> [print_attr_decl x]) attributes
+    @ print_attributes attributes
   in node ConstDeclaration xs x.region
 
 and print_param_decl x =
@@ -631,14 +639,13 @@ and print_fun_decl x =
     @ print_type_opt x.region ret_type
     @ [K.kwd_is kwd_is; print_expr x.region return]
     @ print_terminator terminator
-    @ opt_to_list (fun x -> [print_attr_decl x]) attributes
+    @ print_attributes attributes
   in node FunDeclaration xs x.region
 
 let print_declaration = function
   | TypeDecl  td -> print_type_decl td
   | ConstDecl cd -> print_const_decl cd
   | FunDecl   fd -> print_fun_decl fd
-  | AttrDecl  ad -> print_attr_decl ad
 
 let unparse_cst : Pascaligo.CST.t -> node Ast.t list =
   fun cst -> List.map print_declaration (Utils.nseq_to_list cst.decl)
