@@ -11,7 +11,8 @@ To ensure that you have needed libraries:
 opam install cmdliner ppx_let yojson menhir
 ```
 
-The compilation requires for now to have LIGO from the `dev` branch (the linter will compile from commit `919c412eb0dd40fcc8366c94ddf9f7b71af10b67`).
+The compilation requires for now to have the LIGO library from the `dev` branch (the linter will compile from commit `919c412eb0dd40fcc8366c94ddf9f7b71af10b67`).
+The simplest way to achieve this is to install LIGO in an opam switch and use this switch to build lint_ligo.
 
 To build the executable, just run:
 ```
