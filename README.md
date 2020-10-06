@@ -4,17 +4,37 @@ A linter for the [LIGO](https://ligolang.org/) language.
 
 ## Build
 
+The compilation of `lint_ligo` requires for now to have the LIGO library from the `dev` branch (the linter will compile from commit `919c412eb0dd40fcc8366c94ddf9f7b71af10b67`).
+
+The simplest way to achieve this is to install LIGO in an opam switch and use this switch to build `lint_ligo`.
+
+### Installation of LIGO in a fresh switch
+
+In the root of the LIGO directory, you can run:
+```
+make build
+opam install .
+```
+
+This will create a fresh switch in the LIGO directory, install LIGO dependencies and
+install LIGO itself.
+
+### Build of lint_ligo
+
+Go to the ̀`lint_ligo` directory.
+If you installed LIGO using the previous section, now select it by running:
+```
+opam switch set PATH_OF_LIGO_DIRECTORY
+```
+
 `lint_ligo` uses [dune](https://github.com/ocaml/dune) as a build system.
 
 To ensure that you have needed libraries:
 ```
-opam install cmdliner ppx_let yojson menhir
+opam install dune cmdliner ppx_let yojson menhir
 ```
 
-The compilation requires for now to have the LIGO library from the `dev` branch (the linter will compile from commit `919c412eb0dd40fcc8366c94ddf9f7b71af10b67`).
-The simplest way to achieve this is to install LIGO in an opam switch and use this switch to build lint_ligo.
-
-To build the executable, just run:
+Then, to build the executable, just run:
 ```
 dune build bin/main.exe
 ```
